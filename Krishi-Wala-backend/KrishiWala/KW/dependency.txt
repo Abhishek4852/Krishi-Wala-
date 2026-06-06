@@ -1,3 +1,0 @@
-source path/to/venv/bin/activate
-pip install django
-pip install PyJWT djangorestframework-simplejwt
