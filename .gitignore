@@ -3,7 +3,7 @@ node_modules/
 dist/
 dist-ssr/
 *.local
-
+.venv/
 # Python (Django)
 __pycache__/
 *.py[cod]
