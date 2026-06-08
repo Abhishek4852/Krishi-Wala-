@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import SelectAddress from "../components/SelectAddress";
-import BankDetails from "./BankDetails";
+
 import { useNavigate } from "react-router-dom";
 import Headerpart from "../components/Headerpart";
 import ChatSupport from "./ChatSupport";
@@ -24,11 +24,7 @@ function PostLand() {
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedVillage, setSelectedVillage] = useState("");
 
-  // State for bank details
-  const [name, setName] = useState("");
-  const [bankName, setBankName] = useState("");
-  const [accountNo, setAccountNo] = useState("");
-  const [IFSC, setIFSC] = useState("");
+
   const navigate = useNavigate()
   const handleFileChange = (event) => {
     setLandPhotos(event.target.files);
@@ -136,10 +132,7 @@ function PostLand() {
     formData.append("irrigationSource", irrigationSource);
     formData.append("extraFacilities", extraFacilities);
     formData.append("googleMapLocation", googleMapLocation);
-    formData.append("bankDetails[name]", name);
-    formData.append("bankDetails[bankName]", bankName);
-    formData.append("bankDetails[accountNo]", accountNo);
-    formData.append("bankDetails[IFSC]", IFSC);
+
 
     // Append images
     if (landPhotos) {
@@ -154,6 +147,9 @@ function PostLand() {
       try {
         const response = await fetch(`${API_BASE_URL}/post_land/`, {
           method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`
+          },
           body: formData,
         });
 
@@ -225,25 +221,7 @@ function PostLand() {
       return false;
     }
 
-    if (!name || name.trim() === "") {
-      showAlert("Please enter the Account Holder's Name.", "error");
-      return false;
-    }
 
-    if (!bankName || bankName.trim() === "") {
-      showAlert("Please enter the Bank Name.", "error");
-      return false;
-    }
-
-    if (!accountNo || accountNo.trim() === "") {
-      showAlert("Please enter the Account Number.", "error");
-      return false;
-    }
-
-    if (!IFSC || IFSC.trim() === "") {
-      showAlert("Please enter the IFSC Code.", "error");
-      return false;
-    }
 
     if (!TotalRentPrice || TotalRentPrice <= 0) {
       showAlert("Total Rent Price must be greater than 0.", "error");
@@ -274,20 +252,7 @@ function PostLand() {
   //     return (isAlpha() && validlocation() && isValidMobile() && isrentprice() && irrigationvalid() && validatebankname() && isvalidaccountno() && isvalidIFSC())
   // }
   function isallfieldvalid() {
-    return (isAlpha() && isValidMobile() && isrentprice() && irrigationvalid() && validatebankname() && isvalidaccountno() && isvalidIFSC())
-  }
-  function isAlpha() {
-    const trimmedName = name.trim();
-
-    // This regex allows 1 to 4 words, each containing only letters
-    const regex = /^[A-Za-z]+(?: [A-Za-z]+){0,3}$/;
-
-    if (regex.test(trimmedName)) {
-      return true;
-    } else {
-      showAlert("Please enter a valid Account holder name", "error");
-      return false;
-    }
+    return (isValidMobile() && isrentprice() && irrigationvalid())
   }
 
   function isValidMobile() {
@@ -295,14 +260,6 @@ function PostLand() {
       return true;
     } else {
       showAlert("Please enter a valid mobile number (10 digits, starting from 6-9).", "error");
-      return false;
-    }
-  }
-  function validlocation() {
-    if (selectedState && selectedDistrict && selectedVillage) {
-      return true;
-    } else {
-      showAlert("Please select State, District, and Village.", "error");
       return false;
     }
   }
@@ -317,37 +274,10 @@ function PostLand() {
   }
 
   function irrigationvalid() {
-    if (irrigationSource !== "Select" && irrigationSource !== "") {
+    if (irrigationSource !== "Select" && irrigationSource !== "" && irrigationSource !== "Select Irrigation Source") {
       return true;
     } else {
       showAlert("Please select an irrigation source.", "error");
-      return false;
-    }
-  }
-
-  function validatebankname() {
-    if (/^[A-Za-z ]+$/.test(bankName)) {
-      return true;
-    } else {
-      showAlert("Bank name must contain only alphabets and spaces.", "error");
-      return false;
-    }
-  }
-
-  function isvalidaccountno() {
-    if (/^\d{9,18}$/.test(accountNo)) {
-      return true;
-    } else {
-      showAlert("Please enter a valid account number (9-18 digits).", "error");
-      return false;
-    }
-  }
-
-  function isvalidIFSC() {
-    if (/^[A-Za-z0-9]+$/.test(IFSC)) {
-      return true;
-    } else {
-      showAlert("Please enter a valid IFSC code containing only letters (A-Z, a-z) and numbers.", "error");
       return false;
     }
   }
@@ -503,19 +433,7 @@ function PostLand() {
               villageClass={addressStyles.villageClass}
             />
 
-            {/* You can continue using the same wrapping for the BankDetails section */}
-            <BankDetails
-              name={name}
-              setName={setName}
-              bankName={bankName}
-              setBankName={setBankName}
-              accountNo={accountNo}
-              setAccountNo={setAccountNo}
-              IFSC={IFSC}
-              setIFSC={setIFSC}
-              className={inputClass}
-              placeholder={placeholder}
-            />
+
           </div>
 
           <div className="text-center mt-6">

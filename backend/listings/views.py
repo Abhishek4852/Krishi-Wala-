@@ -179,14 +179,19 @@ def machine_registration(request):
             quantity=quantity
         )
 
-        # Save bank details
-        MachineAccount.objects.create(
-            machine=machine,
-            bname=request.POST.get("bname"),
-            bank_name=request.POST.get("bankName"),
-            account_no=request.POST.get("bAccountNo"),
-            ifsc=request.POST.get("IFSC")
-        )
+        # Save bank details only if provided
+        bname = request.POST.get("bname")
+        bank_name = request.POST.get("bankName")
+        account_no = request.POST.get("bAccountNo")
+        ifsc = request.POST.get("IFSC")
+        if bname or bank_name or account_no or ifsc:
+            MachineAccount.objects.create(
+                machine=machine,
+                bname=bname,
+                bank_name=bank_name,
+                account_no=account_no,
+                ifsc=ifsc
+            )
 
         # Save uploaded images
         images = request.FILES.getlist("machinePhoto")
@@ -370,3 +375,279 @@ def abhishek4852(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Invalid request method."}, status=400)
+
+
+@csrf_exempt
+@jwt_login_required
+def get_profile(request):
+    if request.method != "GET":
+        return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
+    
+    user = request.user
+    return JsonResponse({
+        "status": "success",
+        "user": {
+            "name": user.name,
+            "email": user.email,
+            "mobile": user.mobile,
+            "bank_name": user.bank_name or "",
+            "acc_name": user.acc_name or "",
+            "acc_no": user.acc_no or "",
+            "ifsc": user.ifsc or "",
+            "upi_id": user.upi_id or "",
+            "is_admin": getattr(user, "is_admin", False)
+        }
+    }, status=200)
+
+
+@csrf_exempt
+@jwt_login_required
+def update_profile(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        user = request.user
+        
+        if "name" in data:
+            user.name = data["name"]
+        if "email" in data:
+            user.email = data["email"]
+        if "bank_name" in data:
+            user.bank_name = data["bank_name"]
+        if "acc_name" in data:
+            user.acc_name = data["acc_name"]
+        if "acc_no" in data:
+            user.acc_no = data["acc_no"]
+        if "ifsc" in data:
+            user.ifsc = data["ifsc"]
+        if "upi_id" in data:
+            user.upi_id = data["upi_id"]
+            
+        user.save()
+        
+        return JsonResponse({
+            "message": "Profile updated successfully",
+            "status": "success",
+            "user": {
+                "name": user.name,
+                "email": user.email,
+                "mobile": user.mobile,
+                "bank_name": user.bank_name or "",
+                "acc_name": user.acc_name or "",
+                "acc_no": user.acc_no or "",
+                "ifsc": user.ifsc or "",
+                "upi_id": user.upi_id or ""
+            }
+        }, status=200)
+        
+    except Exception as e:
+        print(traceback.format_exc())
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+@jwt_login_required
+def get_user_listings(request):
+    if request.method != "GET":
+        return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
+    
+    try:
+        mobile = request.user.mobile
+        
+        # Land listings
+        lands = Land.objects.filter(mobile=mobile)
+        land_list = []
+        for land in lands:
+            images = LandPhotos.objects.filter(land_id=land)
+            image_urls = [img.image.url for img in images]
+            land_list.append({
+                "land_id": land.land_id,
+                "name": land.name,
+                "state": land.state,
+                "district": land.district,
+                "village": land.village,
+                "mobile": land.mobile,
+                "LandSize": land.LandSize,
+                "TotalRentPrice": land.TotalRentPrice,
+                "RentPricePerAcre": land.RentPricePerAcre,
+                "rentPeriod": land.rentPeriod,
+                "irrigationSource": land.irrigationSource,
+                "extraFacilities": land.extraFacilities,
+                "map_location": land.map_location,
+                "images": image_urls
+            })
+            
+        # Labour listings
+        labours = Labour.objects.filter(mobile=mobile)
+        labour_list = []
+        for labour in labours:
+            bname = ""
+            bank_name = ""
+            account_no = ""
+            ifsc = ""
+            try:
+                bank = labour.bank_details
+                bname = bank.bname
+                bank_name = bank.bank_name
+                account_no = bank.b_account_no
+                ifsc = bank.IFSC
+            except Exception:
+                pass
+                
+            labour_list.append({
+                "id": labour.id,
+                "name": labour.name,
+                "mobile": labour.mobile,
+                "selected_state": labour.selected_state,
+                "selected_district": labour.selected_district,
+                "selected_village": labour.selected_village,
+                "work_type": labour.work_type,
+                "price": float(labour.price),
+                "price_type": labour.price_type,
+                "age": labour.age,
+                "gender": labour.gender,
+                "experience": labour.experience,
+                "avatar": labour.avatar.url if labour.avatar else "",
+                "availability_time": labour.availability_time or "Full Time",
+                "is_available": labour.is_available,
+                "bank": {
+                    "bname": bname,
+                    "bank_name": bank_name,
+                    "account_no": account_no,
+                    "ifsc": ifsc
+                }
+            })
+            
+        # Machine listings
+        machines = Machine.objects.filter(mobile_no=mobile)
+        machine_list = []
+        for machine in machines:
+            bname = ""
+            bank_name = ""
+            account_no = ""
+            ifsc = ""
+            try:
+                bank = MachineAccount.objects.get(machine=machine)
+                bname = bank.bname
+                bank_name = bank.bank_name
+                account_no = bank.account_no
+                ifsc = bank.ifsc
+            except Exception:
+                pass
+                
+            machine_list.append({
+                "id": machine.id,
+                "owner_name": machine.owner_name,
+                "mobile_no": machine.mobile_no,
+                "state": machine.state,
+                "district": machine.district,
+                "village": machine.village,
+                "machine_name": machine.machine_name,
+                "purpose": machine.purpose,
+                "specification": machine.specification,
+                "with_tractor": machine.with_tractor,
+                "tractor_company": machine.tractor_company,
+                "tractor_model": machine.tractor_model,
+                "hiring_cost_acre": machine.hiring_cost_acre,
+                "hiring_cost_hour": machine.hiring_cost_hour,
+                "quantity": machine.quantity,
+                "images": [img.image.url for img in machine.images.all()],
+                "bank": {
+                    "bname": bname,
+                    "bank_name": bank_name,
+                    "account_no": account_no,
+                    "ifsc": ifsc
+                }
+            })
+            
+        return JsonResponse({
+            "lands": land_list,
+            "labours": labour_list,
+            "machines": machine_list
+        }, status=200)
+        
+    except Exception as e:
+        print(traceback.format_exc())
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+@jwt_login_required
+def update_labour_listing(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
+    try:
+        data = json.loads(request.body)
+        labour_id = data.get("id")
+        labour = Labour.objects.get(id=labour_id, mobile=request.user.mobile)
+        
+        if "price" in data:
+            labour.price = data["price"]
+        if "price_type" in data:
+            labour.price_type = data["price_type"]
+        if "availability_time" in data:
+            labour.availability_time = data["availability_time"]
+        if "is_available" in data:
+            labour.is_available = data["is_available"]
+            
+        labour.save()
+        return JsonResponse({"message": "Labour listing updated successfully", "status": "success"}, status=200)
+    except Labour.DoesNotExist:
+        return JsonResponse({"error": "Listing not found or access denied"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+@jwt_login_required
+def update_land_listing(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
+    try:
+        data = json.loads(request.body)
+        land_id = data.get("land_id")
+        land = Land.objects.get(land_id=land_id, mobile=request.user.mobile)
+        
+        if "TotalRentPrice" in data:
+            land.TotalRentPrice = data["TotalRentPrice"]
+        if "RentPricePerAcre" in data:
+            land.RentPricePerAcre = data["RentPricePerAcre"]
+        if "rentPeriod" in data:
+            land.rentPeriod = data["rentPeriod"]
+        if "extraFacilities" in data:
+            land.extraFacilities = data["extraFacilities"]
+            
+        land.save()
+        return JsonResponse({"message": "Land listing updated successfully", "status": "success"}, status=200)
+    except Land.DoesNotExist:
+        return JsonResponse({"error": "Listing not found or access denied"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+@jwt_login_required
+def update_machine_listing(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
+    try:
+        data = json.loads(request.body)
+        machine_id = data.get("id")
+        machine = Machine.objects.get(id=machine_id, mobile_no=request.user.mobile)
+        
+        if "hiring_cost_acre" in data:
+            machine.hiring_cost_acre = data["hiring_cost_acre"]
+        if "hiring_cost_hour" in data:
+            machine.hiring_cost_hour = data["hiring_cost_hour"]
+        if "quantity" in data:
+            machine.quantity = data["quantity"]
+            
+        machine.save()
+        return JsonResponse({"message": "Machine listing updated successfully", "status": "success"}, status=200)
+    except Machine.DoesNotExist:
+        return JsonResponse({"error": "Listing not found or access denied"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+

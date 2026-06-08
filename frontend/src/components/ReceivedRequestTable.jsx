@@ -3,7 +3,7 @@ import { API_BASE_URL } from "../config";
 import { useAuth } from "../context/AuthContext";
 
 const ReceivedRequestTable = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [requests, setRequests] = useState([]);
   const [showTable, setShowTable] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -22,6 +22,7 @@ const ReceivedRequestTable = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
           receiver_mobile: user.mobile, // Replace with dynamic mobile if needed
@@ -70,7 +71,8 @@ const requestupdate = {
           const response = await fetch(`${API_BASE_URL}/preview_request/`,{
             method:"POST",
             headers:{
-              'Content-Type':"application/json"
+              'Content-Type':"application/json",
+              'Authorization': `Bearer ${token}`
             },
             body:JSON.stringify(requestupdate)
           })

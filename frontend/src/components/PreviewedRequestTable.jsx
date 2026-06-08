@@ -3,7 +3,7 @@ import { API_BASE_URL } from "../config";
 import { useAuth } from "../context/AuthContext";
 
 const PreviewedRequestTable = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [requests, setRequests] = useState([]);
   const [showTable, setShowTable] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -16,9 +16,37 @@ const PreviewedRequestTable = () => {
 
   const handleFetchRequests = async () => {
     setLoading(true);
-    
-    if (!user) { alert("Please log in first."); return; }
-};
+    if (!user) {
+      alert("Please log in first.");
+      setLoading(false);
+      return;
+    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/recieved_request/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          receiver_mobile: user.mobile,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error);
+      }
+
+      const data = await response.json();
+      setRequests(data);
+      setShowTable(true);
+    } catch (error) {
+      console.error("Error fetching requests:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
 //   const handleIgnore = (id) => {
 //     console.log("Ignored Request ID:", id);
@@ -52,7 +80,8 @@ const requestupdate = {
           const response = await fetch(`${API_BASE_URL}/preview_request/`,{
             method:"POST",
             headers:{
-              'Content-Type':"application/json"
+              'Content-Type':"application/json",
+              'Authorization': `Bearer ${token}`
             },
             body:JSON.stringify(requestupdate)
           })

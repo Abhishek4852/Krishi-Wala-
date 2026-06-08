@@ -21,37 +21,32 @@ def filter_land(request):
         period = data.get("period", None)
         irrigation_sources = data.get("irrigationSource", [])
 
-        # Step 1: Filter by State
-        land_records = Land.objects.filter(state=selected_state)
+        # Start filtering
+        land_records = Land.objects.all()
 
-        # Step 2: If more than 6 records, filter by District
-        if land_records.count() > 6 and selected_district:
+        if selected_state:
+            land_records = land_records.filter(state=selected_state)
+        if selected_district:
             land_records = land_records.filter(district=selected_district)
-
-        # Step 3: If more than 6 records, filter by Village
-        if land_records.count() > 6 and selected_village:
+        if selected_village:
             land_records = land_records.filter(village=selected_village)
 
-        # Step 4: If more than 6 records, apply size filter with 40% tolerance
-        if land_records.count() > 6 and size is not None:
+        if size is not None:
             min_size = float(size) * 0.6
             max_size = float(size) * 1.4
             land_records = land_records.filter(LandSize__gte=min_size, LandSize__lte=max_size)
 
-        # Step 5: If more than 6 records, apply price filter with 40% tolerance
-        if land_records.count() > 6 and price_per_acre is not None:
+        if price_per_acre is not None:
             min_price = float(price_per_acre) * 0.6
             max_price = float(price_per_acre) * 1.4
             land_records = land_records.filter(RentPricePerAcre__gte=min_price, RentPricePerAcre__lte=max_price)
 
-        # Step 6: If more than 6 records, apply period filter with 40% tolerance
-        if land_records.count() > 6 and period is not None:
+        if period is not None:
             min_period = float(period) * 0.6
             max_period = float(period) * 1.4
             land_records = land_records.filter(rentPeriod__gte=min_period, rentPeriod__lte=max_period)
 
-        # Step 7: If more than 6 records, apply irrigation source filter
-        if land_records.count() > 6 and isinstance(irrigation_sources, list) and irrigation_sources:
+        if isinstance(irrigation_sources, list) and irrigation_sources:
             irrigation_query = Q()
             for source in irrigation_sources:
                 irrigation_query |= Q(irrigationSource__icontains=source.strip())

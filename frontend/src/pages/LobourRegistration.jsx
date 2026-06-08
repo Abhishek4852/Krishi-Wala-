@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Headerpart from "../components/Headerpart";
 import SelectAddress from "../components/SelectAddress";
-import BankDetails from "./BankDetails";
+
 import ChatSupport from "./ChatSupport";
 import { API_BASE_URL } from "../config";
 import { useAuth } from "../context/AuthContext";
@@ -11,10 +11,7 @@ function LabourRegistration() {
   const { user, token, loading } = useAuth();
   const navigate = useNavigate();
 
-  const [bname, setbName] = useState("");
-  const [bankName, setBankName] = useState("");
-  const [bAccountNo, setbAccountNo] = useState("");
-  const [IFSC, setIFSC] = useState("");
+
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [workType, setWorkType] = useState("");
@@ -88,10 +85,7 @@ function LabourRegistration() {
             formData.append("age", age);
             formData.append("gender", gender);
             formData.append("experience", experience);
-            formData.append("bname", bname);
-            formData.append("bankName", bankName);
-            formData.append("bAccountNo", bAccountNo);
-            formData.append("IFSC", IFSC);
+
 
             if (formData1.avatar) {
               formData.append("avatar", formData1.avatar);
@@ -99,6 +93,9 @@ function LabourRegistration() {
 
             const response = await fetch(`${API_BASE_URL}/labour_registration/`, {
               method: "POST",
+              headers: {
+                "Authorization": `Bearer ${token}`
+              },
               body: formData,
             });
 
@@ -132,9 +129,6 @@ function LabourRegistration() {
       isAlpha() &&
       validlocation() &&
       isValidMobile() &&
-      validatebankname() &&
-      isvalidaccountno() &&
-      isvalidIFSC() &&
       isPrice() &&
       isage() &&
       isexperience()
@@ -142,7 +136,7 @@ function LabourRegistration() {
   }
 
   function isAlpha() {
-    if (/^[A-Za-z]+( [A-Za-z]+){0,3}$/.test(name) && /^[A-Za-z]+( [A-Za-z]+){0,3}$/.test(bname)) {
+    if (/^[A-Za-z]+( [A-Za-z]+){0,3}$/.test(name)) {
       return true;
     } else {
       showAlert("Please enter a valid name");
@@ -168,32 +162,7 @@ function LabourRegistration() {
     }
   }
 
-  function validatebankname() {
-    if (/^[A-Za-z ]+$/.test(bankName)) {
-      return true;
-    } else {
-      showAlert("Bank name must contain only alphabets and spaces.");
-      return false;
-    }
-  }
 
-  function isvalidaccountno() {
-    if (/^\d{9,18}$/.test(bAccountNo)) {
-      return true;
-    } else {
-      showAlert("Please enter a valid account number (9-18 digits).");
-      return false;
-    }
-  }
-
-  function isvalidIFSC() {
-    if (/^[A-Za-z0-9]+$/.test(IFSC)) {
-      return true;
-    } else {
-      showAlert("Please enter a valid IFSC code containing only letters and numbers.");
-      return false;
-    }
-  }
 
   function isPrice() {
     if (/^\d+(\.\d{1,2})?$/.test(price) && parseFloat(price) > 0) {
@@ -377,19 +346,7 @@ function LabourRegistration() {
               placeholder={placeholder}
             />
 
-            {/* Bank Details */}
-            <BankDetails
-              name={bname}
-              setName={setbName}
-              bankName={bankName}
-              setBankName={setBankName}
-              accountNo={bAccountNo}
-              setAccountNo={setbAccountNo}
-              IFSC={IFSC}
-              setIFSC={setIFSC}
-              className={inputClass}
-              placeholder={placeholder}
-            />
+
           </div>
 
           <div className="text-center mt-6">

@@ -5,7 +5,7 @@ import Headerpart from "../components/Headerpart";
 import SelectMachine from "../components/SelectMachine";
 import SelectTractor from "../components/SelectTractor";
 import SelectAddress from "../components/SelectAddress";
-import BankDetails from "./BankDetails";
+
 import ChatSupport from "./ChatSupport";
 import { API_BASE_URL } from "../config";
 import { useAuth } from "../context/AuthContext";
@@ -25,10 +25,7 @@ function MachineRegistration() {
   };
 
   // Bank Details
-  const [bname, setbName] = useState("");
-  const [bankName, setBankName] = useState("");
-  const [bAccountNo, setbAccountNo] = useState("");
-  const [IFSC, setIFSC] = useState("");
+
 
   const [ownerName, setOwnerName] = useState("");
   const [Mobileno, setMobileno] = useState("");
@@ -97,10 +94,7 @@ function MachineRegistration() {
         formData.append("hiringCostAcre", hiringCostAcre);
         formData.append("hiringCostHour", hiringCostHour);
         formData.append("quantity", quantity);
-        formData.append("bname", bname);
-        formData.append("bankName", bankName);
-        formData.append("bAccountNo", bAccountNo);
-        formData.append("IFSC", IFSC);
+
 
         if (machinePhoto) {
           machinePhoto.forEach(file => {
@@ -112,6 +106,9 @@ function MachineRegistration() {
           try {
             const response = await fetch(`${API_BASE_URL}/machine_registration/`, {
               method: "POST",
+              headers: {
+                "Authorization": `Bearer ${token}`
+              },
               body: formData,
             });
 
@@ -139,8 +136,8 @@ function MachineRegistration() {
   };
 
   function isAllFieldEntered() {
-    return ownerName && machineName && purpose && specification &&
-      hiringCostAcre && hiringCostHour && quantity && Mobileno &&
+    return  machineName && purpose && specification &&
+      hiringCostAcre && hiringCostHour && quantity &&
       machinePhoto && machinePhoto.length > 0 && selectLoc();
   }
 
@@ -156,8 +153,7 @@ function MachineRegistration() {
   function isAllFieldValid() {
     return isValidName(ownerName) && isValidCost(hiringCostAcre) &&
       isValidCost(hiringCostHour) && isValidQuantity(quantity) &&
-      isValidMobile(Mobileno) && validatebankname() &&
-      isvalidaccountno() && isvalidIFSC();
+      isValidMobile(UserNumber);
   }
 
   function isValidName(value) {
@@ -173,6 +169,8 @@ function MachineRegistration() {
   }
 
   function isValidMobile(mobile) {
+    console.log()
+    console.log("hello")
     if (/^[6-9]\d{9}$/.test(mobile)) return true;
     showAlert("Please enter a valid mobile number.", "error");
     return false;
@@ -184,23 +182,7 @@ function MachineRegistration() {
     return false;
   }
 
-  function validatebankname() {
-    if (/^[A-Za-z ]+$/.test(bankName)) return true;
-    showAlert("Bank name must contain only letters and spaces.", "error");
-    return false;
-  }
 
-  function isvalidaccountno() {
-    if (/^\d{9,18}$/.test(bAccountNo)) return true;
-    showAlert("Please enter a valid account number (9-18 digits).", "error");
-    return false;
-  }
-
-  function isvalidIFSC() {
-    if (/^[A-Za-z0-9]+$/.test(IFSC)) return true;
-    showAlert("Please enter a valid IFSC code.", "error");
-    return false;
-  }
 
   const inputClass =
     "text-black flex flex-col text-base";
@@ -243,7 +225,7 @@ function MachineRegistration() {
                 value={userName}
                 onChange={(e) => setOwnerName(e.target.value)}
                 className={placeholder}
-                placeholder="Enter Owner's Full Name"
+                // placeholder="Enter Owner's Full Name"
               />
             </div>
 
@@ -254,7 +236,7 @@ function MachineRegistration() {
                 value={UserNumber}
                 onChange={(e) => setMobileno(e.target.value)}
                 className={placeholder}
-                placeholder="Enter Mobile Number"
+                // placeholder="Enter Mobile Number"
               />
             </div>
             <SelectAddress
@@ -384,18 +366,7 @@ function MachineRegistration() {
               </>
             )}
 
-            <BankDetails
-              name={bname}
-              setName={setbName}
-              bankName={bankName}
-              setBankName={setBankName}
-              accountNo={bAccountNo}
-              setAccountNo={setbAccountNo}
-              IFSC={IFSC}
-              setIFSC={setIFSC}
-              className={inputClass}
-              placeholder={placeholder}
-            />
+
 
 
 

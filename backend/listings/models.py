@@ -15,10 +15,10 @@ class Land(models.Model):
     rentPeriod = models.IntegerField()
     irrigationSource = models.CharField(max_length=100)
     extraFacilities = models.CharField(max_length=200)
-    AccName = models.CharField(max_length=50)
-    BankName = models.CharField(max_length=50)
-    AccNo = models.CharField(max_length=20)
-    IFSC = models.CharField(max_length=20)
+    AccName = models.CharField(max_length=50, blank=True, null=True)
+    BankName = models.CharField(max_length=50, blank=True, null=True)
+    AccNo = models.CharField(max_length=20, blank=True, null=True)
+    IFSC = models.CharField(max_length=20, blank=True, null=True)
     map_location = models.CharField(max_length=200)  # Extended length to accommodate longer links/locations
 
 class LandPhotos(models.Model):
@@ -39,13 +39,15 @@ class Labour(models.Model):
     gender = models.CharField(max_length=10, choices=[("Male", "Male"), ("Female", "Female"), ("Other", "Other")])
     experience = models.IntegerField(default=0)
     avatar = CloudinaryField('avatar', null=True, blank=True)
+    availability_time = models.CharField(max_length=100, blank=True, null=True, default="Full Time")
+    is_available = models.BooleanField(default=True)
 
 class LabourBank(models.Model):
     labour = models.OneToOneField(Labour, on_delete=models.CASCADE, related_name="bank_details")
-    bname = models.CharField(max_length=255)
-    bank_name = models.CharField(max_length=255)
-    b_account_no = models.CharField(max_length=50)
-    IFSC = models.CharField(max_length=20)
+    bname = models.CharField(max_length=255, blank=True, null=True)
+    bank_name = models.CharField(max_length=255, blank=True, null=True)
+    b_account_no = models.CharField(max_length=50, blank=True, null=True)
+    IFSC = models.CharField(max_length=20, blank=True, null=True)
 
 class Machine(models.Model):
     owner_name = models.CharField(max_length=255)
@@ -69,7 +71,7 @@ class MachineImage(models.Model):
 
 class MachineAccount(models.Model):
     machine = models.OneToOneField(Machine, on_delete=models.CASCADE)
-    bname = models.CharField(max_length=255)
-    bank_name = models.CharField(max_length=255)
-    account_no = models.CharField(max_length=20)
-    ifsc = models.CharField(max_length=20)
+    bname = models.CharField(max_length=255, blank=True, null=True)
+    bank_name = models.CharField(max_length=255, blank=True, null=True)
+    account_no = models.CharField(max_length=20, blank=True, null=True)
+    ifsc = models.CharField(max_length=20, blank=True, null=True)

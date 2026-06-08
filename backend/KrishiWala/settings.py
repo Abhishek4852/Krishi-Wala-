@@ -14,7 +14,9 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+# Explicitly load .env from the backend directory (same folder as manage.py)
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(dotenv_path=BASE_DIR / ".env")
 
 
 
@@ -149,10 +151,15 @@ import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 
-CLOUDINARY_CLOUD_NAME = os.environ.get("CLOUDINARY_CLOUD_NAME", "your_cloud_name")
-CLOUDINARY_API_KEY = os.environ.get("CLOUDINARY_API_KEY", "your_api_key")
-CLOUDINARY_API_SECRET = os.environ.get("CLOUDINARY_API_SECRET", "your_api_secret")
-
+CLOUDINARY_CLOUD_NAME = os.environ.get("CLOUDINARY_CLOUD_NAME")
+CLOUDINARY_API_KEY = os.environ.get("CLOUDINARY_API_KEY")
+CLOUDINARY_API_SECRET = os.environ.get("CLOUDINARY_API_SECRET")
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.getenv("CLOUDINARY_CLOUD_NAME"),
+    'API_KEY': os.getenv("CLOUDINARY_API_KEY"),
+    'API_SECRET': os.getenv("CLOUDINARY_API_SECRET"),
+}
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 cloudinary.config(
     cloud_name=CLOUDINARY_CLOUD_NAME,
     api_key=CLOUDINARY_API_KEY,
@@ -162,7 +169,7 @@ cloudinary.config(
 
 # JWT Configuration
 # Standard secret key for tokens, default matching previous views
-JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "Abhishek4852")
+JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
 
 # Celery Configuration
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")

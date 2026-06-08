@@ -3,7 +3,7 @@ import { API_BASE_URL } from "../config";
 import { useAuth } from "../context/AuthContext";
 
 const SentRequestTable = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [requests, setRequests] = useState([]);
   const [showTable, setShowTable] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -12,9 +12,41 @@ const SentRequestTable = () => {
   // const [pdata, setpdata] = useState("");
   const handleFetchRequests = async () => {
     setLoading(true);
-  
-      if (!user) { alert("Please log in first."); return; }
-};
+    if (!user) {
+      alert("Please log in first.");
+      setLoading(false);
+      return;
+    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/sent_request/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          sender_mobile: user.mobile,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error);
+      }
+
+      const data = await response.json();
+      const sorted = [...data].sort(
+        (a, b) => new Date(b.sentDate) - new Date(a.sentDate)
+      );
+
+      setRequests(sorted);
+      setShowTable(true);
+    } catch (error) {
+      console.error("Error fetching requests:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const visibleRequests = showAll ? requests : requests.slice(0, 5);
 
