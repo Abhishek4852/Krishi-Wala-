@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import SelectAddress from "./SelectAddress";
 import SelectMachine from "./SelectMachine";
@@ -44,10 +44,6 @@ const MachineSearchSideBar = ({ responsedata, setresponsedata }) => {
   };
 
   const applyFilters = () => {
-    if (selectedState === "") {
-      showAlert("Please Select Your State.");
-      return;
-    }
 
     const filterdata = {
       selectedState,
@@ -89,6 +85,11 @@ const MachineSearchSideBar = ({ responsedata, setresponsedata }) => {
     senddata();
     setIsOpen(false);
   };
+
+  useEffect(() => {
+    applyFilters();
+    // eslint-disable-next-line
+  }, []);
 
   const inputClass = "text-white flex flex-col text-base";
   const placeholder = "bg-white text-black rounded-xl border-gray-800 border-2 w-full";

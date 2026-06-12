@@ -18,22 +18,21 @@ function LabourHireRequest({ labour, open, setOpen }) {
     description: "",
   });
   const navigate = useNavigate();
-  const [userName, setUserName] = useState("");
-  const [userNumber, setUserNumber] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState("");
 
-    useEffect(() => {
+  useEffect(() => {
     if (!loading) {
       if (!token) {
         if (typeof showAlert === 'function') showAlert("Please log in first.", "error");
         else if (typeof alert === 'function') alert("Please log in first.");
         navigate("/login");
       } else if (user) {
-        try { setUserName(user.name); } catch(e) {}
-        try { setUserNumber(user.mobile); } catch(e) {}
-        try { setName(user.name); } catch(e) {}
-        try { setMobile(user.mobile); } catch(e) {}
+        setFormData(prev => ({
+          ...prev,
+          name: user.name || "",
+          mobile: user.mobile || ""
+        }));
       }
     }
   }, [user, token, loading, navigate]);
@@ -62,8 +61,18 @@ function LabourHireRequest({ labour, open, setOpen }) {
   const handleSubmit = async () => {
     const { name, mobile, workTime, workUnit, workType } = formData;
 
-    if (!name || !mobile || !rentingPeriod.start || !rentingPeriod.end || !workTime || !workUnit || !workType) {
-      showAlert("Please fill all required fields.", "error");
+    const missing = [];
+    if (!name) missing.push("Name");
+    if (!mobile) missing.push("Mobile");
+    if (!rentingPeriod.start) missing.push("Start Date");
+    if (!rentingPeriod.end) missing.push("End Date");
+    if (!workTime) missing.push("Work Duration");
+    if (!workUnit) missing.push("Work Unit");
+    if (!workType) missing.push("Work Type");
+
+    if (missing.length > 0) {
+      console.log("Validation Failed! Missing:", missing, "Data:", { name, mobile, start: rentingPeriod.start, end: rentingPeriod.end, workTime, workUnit, workType });
+      showAlert(`Please fill required fields: ${missing.join(", ")}`, "error");
       return;
     }
 
@@ -149,7 +158,7 @@ function LabourHireRequest({ labour, open, setOpen }) {
               type="text"
               name="name"
               placeholder="Enter your name"
-              value={userName}
+              value={formData.name}
               onChange={handleChange}
               className="bg-white text-black rounded-xl p-2 border-gray-800 border-2 w-full"
             />
@@ -158,7 +167,7 @@ function LabourHireRequest({ labour, open, setOpen }) {
               type="number"
               name="mobile"
               placeholder="Enter mobile number"
-              value={userNumber}
+              value={formData.mobile}
               onChange={handleChange}
               className="bg-white text-black rounded-xl p-2 border-gray-800 border-2 w-full"
             />

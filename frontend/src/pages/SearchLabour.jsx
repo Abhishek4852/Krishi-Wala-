@@ -53,25 +53,7 @@ function SearchLabour() {
     }
   }, [responsedata]);
 
-  useEffect(() => {
-    const sampleLabourData = Array(4)
-      .fill()
-      .map((_, i) => ({
-        id: i + 1,
-        name: `Labour ${i + 1}`,
-        labourType: "Construction",
-        experience: `${i + 1} years`,
-        dailyWage: 500 + i * 50,
-        availability: i % 2 === 0,
-        location: {
-          state: "Madhya Pradesh",
-          district: "Indore",
-          village: `Village ${i + 1}`,
-        },
-        profilePhoto: "profilephoto.png",
-      }));
-    setLabourListings(sampleLabourData);
-  }, []);
+  // Removed sample data
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -100,7 +82,7 @@ function SearchLabour() {
               >
                 <div className="w-full md:w-1/3 p-2">
                   <img
-                    src={`https://krishi-wala.onrender.com${labour.profilePhoto}`}
+                    src={`${labour.profilePhoto}`}
                     alt="Labour"
                     className="w-full h-40 object-cover rounded-lg"
                   />

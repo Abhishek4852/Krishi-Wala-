@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import SelectAddress from "./SelectAddress";
 import NavigationBar from "./NavigationBar";
@@ -46,12 +46,12 @@ const LabourSideBar = ({ responsedata, setresponsedata }) => {
     setIsOpen(false);
   };
 
-  async function senddata() {
+  useEffect(() => {
+    applyFilters();
+    // eslint-disable-next-line
+  }, []);
 
-    if (filters.selectedState == "") {
-      showAlert("please select your state.", "error")
-      return
-    }
+  async function senddata() {
 
     try {
       const response = await fetch(`${API_BASE_URL}/search_labour/`, {

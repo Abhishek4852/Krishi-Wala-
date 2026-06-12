@@ -58,27 +58,7 @@ function SearchMachinary() {
     }
   }, [responsedata]);
 
-  useEffect(() => {
-    const sampleMachineryData = Array(6)
-      .fill()
-      .map((_, i) => ({
-        id: i + 1,
-        machineName: `Machine ${i + 1}`,
-        machinePurpose: "Tilling",
-        withTractor: i % 2 === 0,
-        tractorBrand: "Mahindra",
-        tractorModel: `Model ${i + 1}`,
-        hiringCostPerAcre: 500 + i * 50,
-        hiringCostPerHour: 200 + i * 20,
-        location: {
-          state: "Madhya Pradesh",
-          district: "Indore",
-          village: `Village ${i + 1}`,
-        },
-        machinePhotos: ["harvaster.png", "harvester2.jpeg"],
-      }));
-    setMachineryListings(sampleMachineryData);
-  }, []);
+  // Removed sample data
 
   return (
     <div className="flex pt-16">

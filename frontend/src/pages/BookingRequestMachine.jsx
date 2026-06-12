@@ -25,28 +25,28 @@ function BookingRequestMachine({ open, setOpen, machinedata }) {
     setTimeout(() => setAlertMessage(""), 3000); // hide after 3s
   };
 
-  const validate = () => {
-    if (!name.trim()) return showAlert("Please enter your name", "error");
-    if (!/^\d{10}$/.test(mobile)) return showAlert("Enter a valid 10-digit mobile number", "error");
-    if (!rentingPeriod.start || !rentingPeriod.end) return showAlert("Please select both start and end dates", "error");
-    if (!selectedState || !selectedDistrict || !selectedVillage) return showAlert("Please select a valid location", "error");
+    const missing = [];
+    if (!name.trim()) missing.push("Name");
+    if (!/^\d{10}$/.test(mobile)) missing.push("Valid 10-digit Mobile");
+    if (!rentingPeriod.start) missing.push("Start Date");
+    if (!rentingPeriod.end) missing.push("End Date");
+    if (!selectedState || !selectedDistrict || !selectedVillage) missing.push("Valid Location");
+
+    if (missing.length > 0) {
+      showAlert(`Please fill required fields: ${missing.join(", ")}`, "error");
+      return false;
+    }
     return true;
-  };
 
-  const [userName, setUserName] = useState("");
-  const [UserNumber, setUserNumber] = useState("");
-
-    useEffect(() => {
+  useEffect(() => {
     if (!loading) {
       if (!token) {
         if (typeof showAlert === 'function') showAlert("Please log in first.", "error");
         else if (typeof alert === 'function') alert("Please log in first.");
         navigate("/login");
       } else if (user) {
-        try { setUserName(user.name); } catch(e) {}
-        try { setUserNumber(user.mobile); } catch(e) {}
-        try { setName(user.name); } catch(e) {}
-        try { setMobile(user.mobile); } catch(e) {}
+        setName(user.name || "");
+        setMobile(user.mobile || "");
       }
     }
   }, [user, token, loading, navigate]);
@@ -125,14 +125,16 @@ function BookingRequestMachine({ open, setOpen, machinedata }) {
             <input
               type="text"
               placeholder="Enter Your Name"
-              value={userName}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               className="bg-white text-black rounded-xl p-2 border-gray-800 border-2 w-full"
             />
 
             <input
               type="text"
               placeholder="Enter Mobile Number"
-              value={UserNumber}
+              value={mobile}
+              readOnly
               className="bg-white text-black rounded-xl p-2 border-gray-800 border-2 w-full"
             />
 

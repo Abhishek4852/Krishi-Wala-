@@ -55,13 +55,16 @@ def login(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            mobile = data.get("fmobile")
+            login_id = data.get("fmobile") or data.get("email")
             password = data.get("fpass")
 
-            if not mobile or not password:
-                return JsonResponse({"message": "Mobile number and password are required.", "status": "missing_fields"}, status=400)
+            if not login_id or not password:
+                return JsonResponse({"message": "Mobile number/Email and password are required.", "status": "missing_fields"}, status=400)
 
-            user = User.objects.filter(mobile=mobile).first()
+            if "@" in str(login_id):
+                user = User.objects.filter(email=login_id).first()
+            else:
+                user = User.objects.filter(mobile=login_id).first()
 
             if user:
                 if check_password(password, user.password):

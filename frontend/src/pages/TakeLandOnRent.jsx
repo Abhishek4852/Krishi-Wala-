@@ -49,26 +49,7 @@ function TakeLandOnRent() {
 
 
 
-  // Sample API Response (for Testing)
-  useEffect(() => {
-    const sampleData = Array(6).fill().map((_, i) => ({
-      id: i + 1,
-      size: 5 + i,
-      period: 12 + i,
-      pricePerAcre: 15000 + i * 1000,
-      irrigationSource: ["Canal", "Borewell"],
-      extraFacilities: "Electricity, Storage",
-      location: {
-        state: "Madhya Pradesh",
-        district: "Indore",
-        village: `Village ${i + 1}`,
-      },
-      landPhotos: [
-        "imh.jpeg.png", "land2.png"
-      ],
-    }));
-    setLandListings(sampleData);
-  }, []);
+  // Removed hardcoded sample data
 
   const scrollRefs = useRef([]);
 
@@ -139,7 +120,7 @@ function TakeLandOnRent() {
                   {land.images?.map((photo, idx) => (
                     <img
                       key={idx}
-                      src={`https://krishi-wala.onrender.com${photo}`}
+                      src={`${photo}`}
                       alt="Land"
                       className="w-full h-56 object-cover rounded-lg"
                     />
