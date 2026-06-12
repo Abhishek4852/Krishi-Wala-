@@ -9,6 +9,8 @@ const SentRequestTable = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showAll, setShowAll] = useState(false);
+  const [showPaymentInput, setShowPaymentInput] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState("");
   // const [pdata, setpdata] = useState("");
   const handleFetchRequests = async () => {
     setLoading(true);
@@ -49,6 +51,116 @@ const SentRequestTable = () => {
   };
 
   const visibleRequests = showAll ? requests : requests.slice(0, 5);
+
+  const handlePayNowClick = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/check_payment_readiness/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          sender_mobile: user.mobile,
+          receiver_mobile: selectedRequest.receiver_mobile
+        })
+      });
+      const data = await res.json();
+      if (data.status === "error") {
+        alert(data.message);
+      } else if (data.status === "ready") {
+        setShowPaymentInput(true);
+      }
+    } catch (e) {
+      alert("Error checking payment readiness");
+    }
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!paymentAmount || isNaN(paymentAmount) || Number(paymentAmount) <= 0) {
+      alert("Please enter a valid amount");
+      return;
+    }
+    try {
+      let reqType = "";
+      if (selectedRequest.type === "land") reqType = "Land Rent";
+      else if (selectedRequest.type === "labour") reqType = "Labour";
+      else reqType = "Machine Rent";
+
+      const res = await fetch(`${API_BASE_URL}/create_razorpay_order/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          amount: paymentAmount,
+          request_id: selectedRequest.id,
+          request_type: reqType
+        })
+      });
+      const orderData = await res.json();
+      
+      if (orderData.error) {
+        alert("Error creating order: " + orderData.error);
+        return;
+      }
+
+      const options = {
+        key: orderData.key_id,
+        amount: orderData.amount * 100,
+        currency: "INR",
+        name: "Krishi Wala",
+        description: `Payment for ${selectedRequest.type} request`,
+        order_id: orderData.order_id,
+        handler: async function (response) {
+          try {
+            const verifyRes = await fetch(`${API_BASE_URL}/verify_razorpay_payment/`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature
+              })
+            });
+            const verifyData = await verifyRes.json();
+            if (verifyData.status === "success") {
+              alert("Payment Successful!");
+              setSelectedRequest(null);
+              setShowPaymentInput(false);
+              handleFetchRequests();
+            } else {
+              alert("Payment verification failed!");
+            }
+          } catch (e) {
+            alert("Error verifying payment");
+          }
+        },
+        prefill: {
+          name: user.name,
+          contact: user.mobile,
+          email: user.email || ""
+        },
+        theme: {
+          color: "#16a34a"
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response){
+        alert("Payment failed: " + response.error.description);
+      });
+      rzp.open();
+      
+    } catch (e) {
+      console.error(e);
+      alert("Error initiating payment");
+    }
+  };
 
   return (
     <div className="p-4 bg-white text-black">
@@ -113,7 +225,7 @@ const SentRequestTable = () => {
     <div className="bg-white p-6 rounded shadow-lg w-full max-w-3xl relative overflow-y-auto max-h-[90vh]">
       <button
         className="absolute top-2 right-2 text-gray-600 hover:text-black text-2xl font-bold"
-        onClick={() => setSelectedRequest(null)}
+        onClick={() => { setSelectedRequest(null); setShowPaymentInput(false); }}
       >
         &times;
       </button>
@@ -163,14 +275,42 @@ const SentRequestTable = () => {
         </div>
       </div>
 
-      <div className="text-center mt-6">
+      <div className="text-center mt-6 flex justify-center gap-4">
+        {selectedRequest.status === "approved" && !showPaymentInput && (
+          <button
+            className="px-6 py-2 bg-green-600 text-white rounded"
+            onClick={handlePayNowClick}
+          >
+            Pay Now
+          </button>
+        )}
         <button
           className="px-6 py-2 bg-black text-white rounded"
-          onClick={() => setSelectedRequest(null)}
+          onClick={() => { setSelectedRequest(null); setShowPaymentInput(false); }}
         >
           Close
         </button>
       </div>
+
+      {showPaymentInput && (
+        <div className="mt-4 border-t pt-4 text-center">
+            <h3 className="font-bold mb-2">Enter the agreed payment amount (INR):</h3>
+            <input 
+              type="number" 
+              value={paymentAmount} 
+              onChange={(e) => setPaymentAmount(e.target.value)} 
+              className="border border-gray-400 p-2 rounded mb-2 w-1/2" 
+              placeholder="e.g. 5000"
+            />
+            <br/>
+            <button 
+              className="bg-blue-600 text-white px-6 py-2 rounded"
+              onClick={handleConfirmPayment}
+            >
+              Confirm & Pay
+            </button>
+        </div>
+      )}
     </div>
   </div>
 )}

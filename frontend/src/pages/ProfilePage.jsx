@@ -42,6 +42,8 @@ const ProfilePage = () => {
 
   const [fetchingProfile, setFetchingProfile] = useState(true);
   const [fetchingListings, setFetchingListings] = useState(true);
+  const [transactions, setTransactions] = useState([]);
+  const [fetchingTransactions, setFetchingTransactions] = useState(true);
   const [toastAlert, setToastAlert] = useState({ message: "", type: "success" });
 
   const showAlert = (message, type = "success") => {
@@ -90,6 +92,25 @@ const ProfilePage = () => {
     }
   };
 
+  const fetchTransactions = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/transaction_history/`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.status === "success") {
+          setTransactions(data.transactions);
+        }
+      }
+    } catch (e) {
+      console.error("Error fetching transactions", e);
+    } finally {
+      setFetchingTransactions(false);
+    }
+  };
+
   useEffect(() => {
     if (!loading) {
       if (!token) {
@@ -97,6 +118,7 @@ const ProfilePage = () => {
       } else {
         fetchProfile();
         fetchListings();
+        fetchTransactions();
       }
     }
   }, [user, token, loading, navigate]);
@@ -265,7 +287,8 @@ const ProfilePage = () => {
             {[
               { id: "profile", label: "👤 Profile Settings" },
               { id: "listings", label: "🚜 Manage Listings" },
-              { id: "requests", label: "📥 Requests Overview" }
+              { id: "requests", label: "📥 Requests Overview" },
+              { id: "transactions", label: "💸 Transaction History" }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -506,6 +529,76 @@ const ProfilePage = () => {
                       <PreviewedRequestTable />
                     </div>
                   </div>
+                </motion.div>
+              )}
+
+              {/* Tab 4: Transaction History */}
+              {activeTab === "transactions" && (
+                <motion.div
+                  key="transactions-tab"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.25 }}
+                  className="bg-white shadow-sm border border-gray-100 rounded-2xl p-6"
+                >
+                  <h3 className="text-xl font-bold text-green-950 mb-6 flex items-center">
+                    <span className="mr-2 text-2xl font-normal">💸</span> Razorpay Transaction History
+                  </h3>
+                  
+                  {fetchingTransactions ? (
+                    <div className="flex justify-center p-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-700"></div>
+                    </div>
+                  ) : transactions.length === 0 ? (
+                    <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 text-center">
+                      <h4 className="text-lg font-bold text-gray-700">No Transactions Found</h4>
+                      <p className="text-sm text-gray-500 mt-1">You haven't made or received any payments yet.</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+                      <table className="w-full text-sm text-left">
+                        <thead className="bg-gray-50 text-gray-700 uppercase font-bold text-[11px] tracking-wider border-b border-gray-200">
+                          <tr>
+                            <th className="px-5 py-4">Date</th>
+                            <th className="px-5 py-4">Order ID</th>
+                            <th className="px-5 py-4">Description</th>
+                            <th className="px-5 py-4 text-center">Type</th>
+                            <th className="px-5 py-4 text-center">Status</th>
+                            <th className="px-5 py-4 text-right">Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100 bg-white">
+                          {transactions.map((txn, idx) => (
+                            <tr key={idx} className="hover:bg-gray-50/50 transition">
+                              <td className="px-5 py-4 text-gray-600 font-medium whitespace-nowrap">{txn.date}</td>
+                              <td className="px-5 py-4 text-gray-400 font-mono text-xs">{txn.order_id}</td>
+                              <td className="px-5 py-4 text-gray-800 font-medium max-w-xs truncate" title={txn.description}>{txn.description}</td>
+                              <td className="px-5 py-4 text-center">
+                                <span className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold tracking-wide uppercase ${
+                                  txn.type === "Credited" ? "bg-green-100 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-100"
+                                }`}>
+                                  {txn.type === "Credited" ? "↓ CREDITED" : "↑ DEBITED"}
+                                </span>
+                              </td>
+                              <td className="px-5 py-4 text-center">
+                                <span className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold tracking-wide uppercase ${
+                                  txn.status === "paid" ? "bg-green-100 text-green-700 border border-green-200" : 
+                                  txn.status === "failed" ? "bg-red-50 text-red-700 border border-red-100" :
+                                  "bg-yellow-50 text-yellow-700 border border-yellow-200"
+                                }`}>
+                                  {txn.status.toUpperCase()}
+                                </span>
+                              </td>
+                              <td className={`px-5 py-4 text-right font-bold whitespace-nowrap ${txn.type === "Credited" ? "text-green-600" : "text-gray-900"}`}>
+                                {txn.type === "Credited" ? "+" : "-"}₹{parseFloat(txn.amount).toLocaleString('en-IN')}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </motion.div>
               )}
 

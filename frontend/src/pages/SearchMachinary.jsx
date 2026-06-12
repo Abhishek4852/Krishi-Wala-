@@ -58,7 +58,25 @@ function SearchMachinary() {
     }
   }, [responsedata]);
 
-  // Removed sample data
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/search_machine/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setresponsedata(data);
+        }
+      } catch (e) {
+        console.error("Error fetching initial machinery data", e);
+      }
+    };
+    fetchInitialData();
+  }, []);
+
 
   return (
     <div className="flex pt-16">

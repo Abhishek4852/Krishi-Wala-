@@ -47,9 +47,25 @@ function TakeLandOnRent() {
     }
   }, [responseData]);
 
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/filter_land/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setresponseData(data);
+        }
+      } catch (e) {
+        console.error("Error fetching initial land data", e);
+      }
+    };
+    fetchInitialData();
+  }, []);
 
-
-  // Removed hardcoded sample data
 
   const scrollRefs = useRef([]);
 

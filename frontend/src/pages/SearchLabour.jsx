@@ -53,8 +53,24 @@ function SearchLabour() {
     }
   }, [responsedata]);
 
-  // Removed sample data
-
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/search_labour/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setresponsedata(data);
+        }
+      } catch (e) {
+        console.error("Error fetching initial labour data", e);
+      }
+    };
+    fetchInitialData();
+  }, []);
   return (
     <div className="flex flex-col min-h-screen">
       {alertMessage && (

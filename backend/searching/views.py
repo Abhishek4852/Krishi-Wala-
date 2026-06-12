@@ -6,66 +6,66 @@ import traceback
 
 from listings.models import Land, LandPhotos, Machine, Labour
 
+def normalize_state(state):
+    if not state:
+        return state
+    mapping = {
+        "MadhyaPradesh": "Madhya Pradesh",
+        "Himachal_Pradesh": "Himachal Pradesh",
+        "Dadra_and_Nagar_Haveli": "Dadra and Nagar Haveli",
+        "Jammu_and_Kashmir": "Jammu and Kashmir",
+        "Jharhand ": "Jharkhand",
+        "Jharkhand ": "Jharkhand",
+        "UttarPradesh": "Uttar Pradesh",
+        "AndhraPradesh": "Andhra Pradesh",
+    }
+    return mapping.get(state, state)
+
 @csrf_exempt
 def filter_land(request):
     if request.method != "POST":
         return JsonResponse({"error": "Invalid request method"}, status=400)
     try:
         data = json.loads(request.body)
-        print("Filtering Land Data:", data)
-        selected_state = data.get("selectedState", "")
+        selected_state = normalize_state(data.get("selectedState", ""))
         selected_district = data.get("selectedDistrict", "")
         selected_village = data.get("selectedVillage", "")
-        size = data.get("size")
-        price_per_acre = data.get("pricePerAcre")
-        period = data.get("period")
+        size = data.get("size", None)
+        price_per_acre = data.get("pricePerAcre", None)
+        period = data.get("period", None)
         irrigation_sources = data.get("irrigationSource", [])
 
+        # Start filtering
         land_records = Land.objects.all()
+        if selected_state:
+            land_records = land_records.filter(state=selected_state)
+        if selected_district:
+            land_records = land_records.filter(district=selected_district)
+        if selected_village:
+            land_records = land_records.filter(village=selected_village)
 
-        is_filtered = any([selected_state, selected_district, selected_village, size, price_per_acre, period, irrigation_sources])
+        if size not in [None, ""] and float(size) > 0:
+            min_size = float(size) * 0.6
+            max_size = float(size) * 1.4
+            land_records = land_records.filter(LandSize__gte=min_size, LandSize__lte=max_size)
 
-        if not is_filtered:
-            land_records = land_records.order_by('?')[:50]
-        else:
-            if size not in [None, "", 0, "0"]:
-                try:
-                    min_size = float(size) * 0.6
-                    max_size = float(size) * 1.4
-                    land_records = land_records.filter(LandSize__gte=min_size, LandSize__lte=max_size)
-                except ValueError:
-                    pass
+        if price_per_acre not in [None, ""] and float(price_per_acre) > 0:
+            min_price = float(price_per_acre) * 0.6
+            max_price = float(price_per_acre) * 1.4
+            land_records = land_records.filter(RentPricePerAcre__gte=min_price, RentPricePerAcre__lte=max_price)
 
-            if price_per_acre not in [None, "", 0, "0"]:
-                try:
-                    min_price = float(price_per_acre) * 0.6
-                    max_price = float(price_per_acre) * 1.4
-                    land_records = land_records.filter(RentPricePerAcre__gte=min_price, RentPricePerAcre__lte=max_price)
-                except ValueError:
-                    pass
+        if period not in [None, ""] and float(period) > 0:
+            min_period = float(period) * 0.6
+            max_period = float(period) * 1.4
+            land_records = land_records.filter(rentPeriod__gte=min_period, rentPeriod__lte=max_period)
 
-            if period not in [None, "", 0, "0"]:
-                try:
-                    min_period = float(period) * 0.6
-                    max_period = float(period) * 1.4
-                    land_records = land_records.filter(rentPeriod__gte=min_period, rentPeriod__lte=max_period)
-                except ValueError:
-                    pass
+        if isinstance(irrigation_sources, list) and irrigation_sources:
+            irrigation_query = Q()
+            for source in irrigation_sources:
+                irrigation_query |= Q(irrigationSource__icontains=source.strip())
+            land_records = land_records.filter(irrigation_query)
 
-            if isinstance(irrigation_sources, list) and irrigation_sources:
-                irrigation_query = Q()
-                for source in irrigation_sources:
-                    if source.strip():
-                        irrigation_query |= Q(irrigationSource__icontains=source.strip())
-                if irrigation_query:
-                    land_records = land_records.filter(irrigation_query)
-
-            if selected_state:
-                land_records = land_records.filter(state=selected_state)
-            if land_records.count() > 50 and selected_district:
-                land_records = land_records.filter(district=selected_district)
-            if land_records.count() > 50 and selected_village:
-                land_records = land_records.filter(village=selected_village)
+        land_records = land_records[:50]
 
         # Prepare the response data
         response_data = []
@@ -95,7 +95,7 @@ def filter_land(request):
                 "images": image_path_list
             })
         
-        print("LAND RECORDS LENGTH:", len(response_data)); return JsonResponse(response_data, status=200, safe=False)
+        return JsonResponse(response_data, status=200, safe=False)
 
     except Exception as e:
         print(traceback.format_exc())
@@ -108,51 +108,47 @@ def search_machine(request):
         
     try:
         data = json.loads(request.body)
-        selected_state = data.get("selectedState", "")
-        selected_district = data.get("selectedDistrict", "")
-        selected_village = data.get("selectedVillage", "")
-        machine_purpose = data.get("machinePurpose", "")
-        machine_name = data.get("machineName", "")
+        selected_state = normalize_state(data.get("selectedState"))
+        selected_district = data.get("selectedDistrict")
+        selected_village = data.get("selectedVillage")
+        machine_purpose = data.get("machinePurpose")
+        machine_name = data.get("machineName")
         with_tractor = data.get("withTractor")
-        tractor_brand = data.get("tractorBrand", "")
-        tractor_model = data.get("tractorModel", "")
-        hiring_cost_acre = data.get("hiringCostPerAcre")
-        hiring_cost_hour = data.get("hiringCostPerHour")
+        tractor_brand = data.get("tractorBrand")
+        tractor_model = data.get("tractorModel")
 
+        # Step 1: Filter by state
         machines = Machine.objects.all()
+        if selected_state:
+            machines = machines.filter(state=selected_state)
 
-        is_filtered = any([selected_state, selected_district, selected_village, machine_purpose, machine_name, with_tractor is not None, tractor_brand, tractor_model])
+        # Step 2: If more than 6 machines, filter by district
+        if machines.count() > 6 and selected_district:
+            machines = machines.filter(district=selected_district)
 
-        if not is_filtered:
-            machines = machines.order_by('?')[:50]
-        else:
-            if machine_purpose:
-                machines = machines.filter(purpose=machine_purpose)
-            if machine_name:
-                machines = machines.filter(machine_name=machine_name)
-            if with_tractor: # Only filter if true, as false means user didn't check the box
-                machines = machines.filter(with_tractor=with_tractor)
-            if tractor_brand:
-                machines = machines.filter(tractor_company=tractor_brand)
-            if tractor_model:
-                machines = machines.filter(tractor_model=tractor_model)
-            if hiring_cost_acre not in [None, "", 0, "0"]:
-                try:
-                    machines = machines.filter(hiring_cost_acre__lte=float(hiring_cost_acre))
-                except ValueError:
-                    pass
-            if hiring_cost_hour not in [None, "", 0, "0"]:
-                try:
-                    machines = machines.filter(hiring_cost_hour__lte=float(hiring_cost_hour))
-                except ValueError:
-                    pass
+        # Step 3: If more than 6, filter by village
+        if machines.count() > 6 and selected_village:
+            machines = machines.filter(village=selected_village)
 
-            if selected_state:
-                machines = machines.filter(state=selected_state)
-            if machines.count() > 50 and selected_district:
-                machines = machines.filter(district=selected_district)
-            if machines.count() > 50 and selected_village:
-                machines = machines.filter(village=selected_village)
+        # Step 4: If more than 6, filter by machine purpose
+        if machines.count() > 6 and machine_purpose:
+            machines = machines.filter(purpose=machine_purpose)
+
+        # Step 5: If more than 6, filter by machine name
+        if machines.count() > 6 and machine_name:
+            machines = machines.filter(machine_name=machine_name)
+
+        # Step 6: If more than 6, filter by withTractor
+        if machines.count() > 6 and with_tractor is True:
+            machines = machines.filter(with_tractor=True)
+
+        # Step 7: If more than 6, filter by tractor brand and model
+        if machines.count() > 6 and tractor_brand:
+            machines = machines.filter(tractor_company=tractor_brand)
+        if machines.count() > 6 and tractor_model:
+            machines = machines.filter(tractor_model=tractor_model)
+
+        machines = machines[:50]
 
         # Prepare response
         response_data = []
@@ -190,45 +186,39 @@ def search_labour(request):
 
     try:
         data = json.loads(request.body)
-        selected_state = data.get("selectedState", "")
-        selected_district = data.get("selectedDistrict", "")
-        selected_village = data.get("selectedVillage", "")
-        work_type = data.get("workType", "")
-        experience = data.get("minimumExp", None)
-        wage_per_day = data.get("wagePerDay", None)
-        wage_per_hour = data.get("wagePerHour", None)
+        selected_state = normalize_state(data.get("selectedState"))
+        selected_district = data.get("selectedDistrict")
+        selected_village = data.get("selectedVillage")
+        work_type = data.get("workType")
+        experience = data.get("minimumExp")
+        wage_per_day = data.get("wagePerDay")
+        wage_per_hour = data.get("wagePerHour")
 
+        # Start with filtering by state
         query = Labour.objects.all()
+        if selected_state:
+            query = query.filter(selected_state=selected_state)
         
-        is_filtered = any([selected_state, selected_district, selected_village, work_type, experience, wage_per_day, wage_per_hour])
+        # Apply filters step by step if records > 6
+        if query.count() > 6 and selected_district:
+            query = query.filter(selected_district=selected_district)
         
-        if not is_filtered:
-            query = query.order_by('?')[:50]
-        else:
-            if work_type:
-                query = query.filter(work_type=work_type)
-            if experience not in [None, "", 0, "0"]:
-                try:
-                    query = query.filter(experience__gte=int(experience))
-                except ValueError:
-                    pass
-            if wage_per_day not in [None, "", 0, "0"]:
-                try:
-                    query = query.filter(price_type="Per Day", price__lte=float(wage_per_day))
-                except ValueError:
-                    pass
-            if wage_per_hour not in [None, "", 0, "0"]:
-                try:
-                    query = query.filter(price_type="Per Hour", price__lte=float(wage_per_hour))
-                except ValueError:
-                    pass
-                
-            if selected_state:
-                query = query.filter(selected_state=selected_state)
-            if query.count() > 50 and selected_district:
-                query = query.filter(selected_district=selected_district)
-            if query.count() > 50 and selected_village:
-                query = query.filter(selected_village=selected_village)
+        if query.count() > 6 and selected_village:
+            query = query.filter(selected_village=selected_village)
+        
+        if query.count() > 6 and work_type:
+            query = query.filter(work_type=work_type)
+        
+        if query.count() > 6 and experience:
+            query = query.filter(experience__gte=int(experience))
+        
+        if query.count() > 6 and wage_per_day:
+            query = query.filter(price_type="Per Day", price__lte=float(wage_per_day))
+        
+        if query.count() > 6 and wage_per_hour:
+            query = query.filter(price_type="Per Hour", price__lte=float(wage_per_hour))
+
+        query = query[:50]
 
         # Convert query results to JSON format
         labour_list = [
@@ -249,7 +239,7 @@ def search_labour(request):
             }
             for labour in query
         ]
-        return JsonResponse({"labourListings": labour_list}, status=200)
+        return JsonResponse(labour_list, safe=False)
 
     except Exception as e:
         print(traceback.format_exc())
