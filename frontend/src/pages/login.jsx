@@ -116,13 +116,13 @@ function Login() {
 
             <h1 className="text-2xl md:text-3xl font-bold text-center  mb-6 ">Login</h1>
 
-            <h1 className="text-left ml-5 font-bold">  User Name </h1>
+            <h1 className="text-left ml-5 font-bold">  Email or Mobile </h1>
             <div className="relative mb-4 border-2 rounded-3xl  border-green-700">
 
               <MdPersonOutline className="absolute right-4 top-3.5 text-xl" />
               <input
-                type="number"
-                placeholder="Enter your mobile number "
+                type="text"
+                placeholder="Enter your email or mobile number"
                 value={mobile}
                 onChange={(e) => setMobile(e.target.value)}
                 className="w-full py-3  autofill:bg-white text-center rounded-full px-5 pr-14  text-base appearance-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -151,6 +151,17 @@ py-3 text-center rounded-full px-5 pr-14  text-base  text-black"
               className="bg-green-700 hover:bg-green-800 transition duration-300 w-full h-12 text-white rounded-full  font-bold  mb-4"
             >
               Login
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setMobile("testuser@example.com");
+                setPass("password123");
+              }}
+              className="bg-blue-600 hover:bg-blue-700 transition duration-300 w-full h-12 text-white rounded-full font-bold mb-4 text-sm"
+            >
+              Auto-Fill Test Credentials
             </button>
 
             <p className="text-sm text-center mb-4 text-gray-800 ">

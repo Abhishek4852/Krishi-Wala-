@@ -55,10 +55,6 @@ export default function TakeLandOnRentHeader({
 
   const applyFilters = () => {
 
-    if (selectedState == "") {
-      showAlert("Please Select Your State.", "error")
-      return;
-    }
 
     async function senddata() {
       try {
@@ -103,6 +99,11 @@ export default function TakeLandOnRentHeader({
     senddata();
     setIsOpen(false);
   };
+
+  useEffect(() => {
+    applyFilters();
+    // eslint-disable-next-line
+  }, []);
 
   const inputClass = "text-white flex flex-col text-base";
   const placeholder = "bg-white text-black rounded-xl border-gray-800 border-2 w-full";

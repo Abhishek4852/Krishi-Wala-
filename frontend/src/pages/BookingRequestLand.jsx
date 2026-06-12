@@ -26,39 +26,29 @@ const BookingRequestLand = ({ isOpen, onClose, landData }) => {
     const nameRegex = /^[A-Za-z\s]+$/;
     const mobileRegex = /^[6-9]\d{9}$/;
 
-    if (!nameRegex.test(name)) {
-      showAlert("Name should not contain numbers or special characters.");
-      return false;
-    }
-    if (!mobileRegex.test(mobile)) {
-      showAlert("Mobile number should be 10 digits and start with 6 or higher.");
-      return false;
-    }
-    if (!landSize || landSize <= 0) {
-      showAlert("Please enter a valid land size.");
-      return false;
-    }
-    if (!rentingPeriod.start || !rentingPeriod.end) {
-      showAlert("Please select a valid renting period.");
+    const missing = [];
+    if (!nameRegex.test(name)) missing.push("Valid Name (no numbers/special characters)");
+    if (!mobileRegex.test(mobile)) missing.push("Valid 10-digit Mobile (starting with 6-9)");
+    if (!landSize || landSize <= 0) missing.push("Valid Land Size");
+    if (!rentingPeriod.start) missing.push("Start Date");
+    if (!rentingPeriod.end) missing.push("End Date");
+
+    if (missing.length > 0) {
+      showAlert(`Please fill required fields: ${missing.join(", ")}`);
       return false;
     }
     return true;
   };
 
-  const [userName, setUserName] = useState("");
-  const [UserNumber, setUserNumber] = useState("");
-
-    useEffect(() => {
+  useEffect(() => {
     if (!loading) {
       if (!token) {
         if (typeof showAlert === 'function') showAlert("Please log in first.", "error");
         else if (typeof alert === 'function') alert("Please log in first.");
         navigate("/login");
       } else if (user) {
-        try { setUserName(user.name); } catch(e) {}
-        try { setUserNumber(user.mobile); } catch(e) {}
-        try { setName(user.name); } catch(e) {}
-        try { setMobile(user.mobile); } catch(e) {}
+        setName(user.name || "");
+        setMobile(user.mobile || "");
       }
     }
   }, [user, token, loading, navigate]);
@@ -146,7 +136,7 @@ const BookingRequestLand = ({ isOpen, onClose, landData }) => {
               <input
                 type="text"
                 className="bg-white text-black rounded-xl p-2 border-gray-800 border-2 w-full"
-                value={userName}
+                value={name}
                 onChange={(e) => setName(e.target.value)}
               />
 
@@ -154,7 +144,7 @@ const BookingRequestLand = ({ isOpen, onClose, landData }) => {
               <input
                 type="number"
                 className="bg-white text-black rounded-xl p-2 border-gray-800 border-2 w-full"
-                value={UserNumber}
+                value={mobile}
                 readOnly
               />
 
