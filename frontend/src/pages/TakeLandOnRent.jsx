@@ -47,28 +47,25 @@ function TakeLandOnRent() {
     }
   }, [responseData]);
 
-
-
-  // Sample API Response (for Testing)
   useEffect(() => {
-    const sampleData = Array(6).fill().map((_, i) => ({
-      id: i + 1,
-      size: 5 + i,
-      period: 12 + i,
-      pricePerAcre: 15000 + i * 1000,
-      irrigationSource: ["Canal", "Borewell"],
-      extraFacilities: "Electricity, Storage",
-      location: {
-        state: "Madhya Pradesh",
-        district: "Indore",
-        village: `Village ${i + 1}`,
-      },
-      landPhotos: [
-        "imh.jpeg.png", "land2.png"
-      ],
-    }));
-    setLandListings(sampleData);
+    const fetchInitialData = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/filter_land/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setresponseData(data);
+        }
+      } catch (e) {
+        console.error("Error fetching initial land data", e);
+      }
+    };
+    fetchInitialData();
   }, []);
+
 
   const scrollRefs = useRef([]);
 
@@ -139,7 +136,7 @@ function TakeLandOnRent() {
                   {land.images?.map((photo, idx) => (
                     <img
                       key={idx}
-                      src={`https://krishi-wala.onrender.com${photo}`}
+                      src={`${photo}`}
                       alt="Land"
                       className="w-full h-56 object-cover rounded-lg"
                     />

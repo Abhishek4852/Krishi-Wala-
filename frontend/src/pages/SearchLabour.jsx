@@ -54,25 +54,23 @@ function SearchLabour() {
   }, [responsedata]);
 
   useEffect(() => {
-    const sampleLabourData = Array(4)
-      .fill()
-      .map((_, i) => ({
-        id: i + 1,
-        name: `Labour ${i + 1}`,
-        labourType: "Construction",
-        experience: `${i + 1} years`,
-        dailyWage: 500 + i * 50,
-        availability: i % 2 === 0,
-        location: {
-          state: "Madhya Pradesh",
-          district: "Indore",
-          village: `Village ${i + 1}`,
-        },
-        profilePhoto: "profilephoto.png",
-      }));
-    setLabourListings(sampleLabourData);
+    const fetchInitialData = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/search_labour/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setresponsedata(data);
+        }
+      } catch (e) {
+        console.error("Error fetching initial labour data", e);
+      }
+    };
+    fetchInitialData();
   }, []);
-
   return (
     <div className="flex flex-col min-h-screen">
       {alertMessage && (
@@ -100,7 +98,7 @@ function SearchLabour() {
               >
                 <div className="w-full md:w-1/3 p-2">
                   <img
-                    src={`https://krishi-wala.onrender.com${labour.profilePhoto}`}
+                    src={`${labour.profilePhoto}`}
                     alt="Labour"
                     className="w-full h-40 object-cover rounded-lg"
                   />

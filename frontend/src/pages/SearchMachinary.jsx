@@ -59,26 +59,24 @@ function SearchMachinary() {
   }, [responsedata]);
 
   useEffect(() => {
-    const sampleMachineryData = Array(6)
-      .fill()
-      .map((_, i) => ({
-        id: i + 1,
-        machineName: `Machine ${i + 1}`,
-        machinePurpose: "Tilling",
-        withTractor: i % 2 === 0,
-        tractorBrand: "Mahindra",
-        tractorModel: `Model ${i + 1}`,
-        hiringCostPerAcre: 500 + i * 50,
-        hiringCostPerHour: 200 + i * 20,
-        location: {
-          state: "Madhya Pradesh",
-          district: "Indore",
-          village: `Village ${i + 1}`,
-        },
-        machinePhotos: ["harvaster.png", "harvester2.jpeg"],
-      }));
-    setMachineryListings(sampleMachineryData);
+    const fetchInitialData = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/search_machine/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setresponsedata(data);
+        }
+      } catch (e) {
+        console.error("Error fetching initial machinery data", e);
+      }
+    };
+    fetchInitialData();
   }, []);
+
 
   return (
     <div className="flex pt-16">

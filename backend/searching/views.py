@@ -6,14 +6,28 @@ import traceback
 
 from listings.models import Land, LandPhotos, Machine, Labour
 
+def normalize_state(state):
+    if not state:
+        return state
+    mapping = {
+        "MadhyaPradesh": "Madhya Pradesh",
+        "Himachal_Pradesh": "Himachal Pradesh",
+        "Dadra_and_Nagar_Haveli": "Dadra and Nagar Haveli",
+        "Jammu_and_Kashmir": "Jammu and Kashmir",
+        "Jharhand ": "Jharkhand",
+        "Jharkhand ": "Jharkhand",
+        "UttarPradesh": "Uttar Pradesh",
+        "AndhraPradesh": "Andhra Pradesh",
+    }
+    return mapping.get(state, state)
+
 @csrf_exempt
 def filter_land(request):
     if request.method != "POST":
         return JsonResponse({"error": "Invalid request method"}, status=400)
     try:
         data = json.loads(request.body)
-        print("Filtering Land Data:", data)
-        selected_state = data.get("selectedState", "")
+        selected_state = normalize_state(data.get("selectedState", ""))
         selected_district = data.get("selectedDistrict", "")
         selected_village = data.get("selectedVillage", "")
         size = data.get("size", None)
@@ -23,7 +37,6 @@ def filter_land(request):
 
         # Start filtering
         land_records = Land.objects.all()
-
         if selected_state:
             land_records = land_records.filter(state=selected_state)
         if selected_district:
@@ -31,17 +44,17 @@ def filter_land(request):
         if selected_village:
             land_records = land_records.filter(village=selected_village)
 
-        if size is not None:
+        if size not in [None, ""] and float(size) > 0:
             min_size = float(size) * 0.6
             max_size = float(size) * 1.4
             land_records = land_records.filter(LandSize__gte=min_size, LandSize__lte=max_size)
 
-        if price_per_acre is not None:
+        if price_per_acre not in [None, ""] and float(price_per_acre) > 0:
             min_price = float(price_per_acre) * 0.6
             max_price = float(price_per_acre) * 1.4
             land_records = land_records.filter(RentPricePerAcre__gte=min_price, RentPricePerAcre__lte=max_price)
 
-        if period is not None:
+        if period not in [None, ""] and float(period) > 0:
             min_period = float(period) * 0.6
             max_period = float(period) * 1.4
             land_records = land_records.filter(rentPeriod__gte=min_period, rentPeriod__lte=max_period)
@@ -51,6 +64,8 @@ def filter_land(request):
             for source in irrigation_sources:
                 irrigation_query |= Q(irrigationSource__icontains=source.strip())
             land_records = land_records.filter(irrigation_query)
+
+        land_records = land_records[:50]
 
         # Prepare the response data
         response_data = []
@@ -93,7 +108,7 @@ def search_machine(request):
         
     try:
         data = json.loads(request.body)
-        selected_state = data.get("selectedState")
+        selected_state = normalize_state(data.get("selectedState"))
         selected_district = data.get("selectedDistrict")
         selected_village = data.get("selectedVillage")
         machine_purpose = data.get("machinePurpose")
@@ -103,7 +118,9 @@ def search_machine(request):
         tractor_model = data.get("tractorModel")
 
         # Step 1: Filter by state
-        machines = Machine.objects.filter(state=selected_state)
+        machines = Machine.objects.all()
+        if selected_state:
+            machines = machines.filter(state=selected_state)
 
         # Step 2: If more than 6 machines, filter by district
         if machines.count() > 6 and selected_district:
@@ -122,14 +139,16 @@ def search_machine(request):
             machines = machines.filter(machine_name=machine_name)
 
         # Step 6: If more than 6, filter by withTractor
-        if machines.count() > 6 and with_tractor is not None:
-            machines = machines.filter(with_tractor=with_tractor)
+        if machines.count() > 6 and with_tractor is True:
+            machines = machines.filter(with_tractor=True)
 
         # Step 7: If more than 6, filter by tractor brand and model
         if machines.count() > 6 and tractor_brand:
             machines = machines.filter(tractor_company=tractor_brand)
         if machines.count() > 6 and tractor_model:
             machines = machines.filter(tractor_model=tractor_model)
+
+        machines = machines[:50]
 
         # Prepare response
         response_data = []
@@ -167,7 +186,7 @@ def search_labour(request):
 
     try:
         data = json.loads(request.body)
-        selected_state = data.get("selectedState")
+        selected_state = normalize_state(data.get("selectedState"))
         selected_district = data.get("selectedDistrict")
         selected_village = data.get("selectedVillage")
         work_type = data.get("workType")
@@ -176,13 +195,15 @@ def search_labour(request):
         wage_per_hour = data.get("wagePerHour")
 
         # Start with filtering by state
-        query = Labour.objects.filter(selected_state=selected_state)
+        query = Labour.objects.all()
+        if selected_state:
+            query = query.filter(selected_state=selected_state)
         
         # Apply filters step by step if records > 6
-        if query.count() > 6:
+        if query.count() > 6 and selected_district:
             query = query.filter(selected_district=selected_district)
         
-        if query.count() > 6:
+        if query.count() > 6 and selected_village:
             query = query.filter(selected_village=selected_village)
         
         if query.count() > 6 and work_type:
@@ -196,6 +217,8 @@ def search_labour(request):
         
         if query.count() > 6 and wage_per_hour:
             query = query.filter(price_type="Per Hour", price__lte=float(wage_per_hour))
+
+        query = query[:50]
 
         # Convert query results to JSON format
         labour_list = [
@@ -216,7 +239,7 @@ def search_labour(request):
             }
             for labour in query
         ]
-        return JsonResponse({"labourListings": labour_list}, status=200)
+        return JsonResponse(labour_list, safe=False)
 
     except Exception as e:
         print(traceback.format_exc())

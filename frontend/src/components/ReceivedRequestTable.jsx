@@ -8,10 +8,6 @@ const ReceivedRequestTable = () => {
   const [showTable, setShowTable] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [loading, setLoading] = useState(false);
-  
-
- const [requestprice, setrequestprice] = useState("");
- const [preview_desc, setpreview_desc] = useState("");
 
   const handleFetchRequests = async () => {
     setLoading(true);
@@ -47,9 +43,6 @@ const ReceivedRequestTable = () => {
 
 function afterprivew(status , preview_request){
     console.log(status)
-     console.log(requestprice)
-     console.log(preview_desc)
-    
     console.log(preview_request)
 const requestupdate = {
    preview_request,
@@ -59,8 +52,8 @@ const requestupdate = {
 }
     if (status == "approved"){
         requestupdate.preview_status = "approved"
-        requestupdate.preview_price = requestprice
-        requestupdate.preview_description = preview_desc
+        requestupdate.preview_price = ""
+        requestupdate.preview_description = ""
         
     }
     if(status == "rejected"){
@@ -97,8 +90,6 @@ const requestupdate = {
 senddata();
     console.log(requestupdate)
     setSelectedRequest(null)
-    setrequestprice("")
-    setpreview_desc("")
 }
 
 
@@ -213,32 +204,6 @@ senddata();
               <p><strong>Rent Period:</strong> {selectedRequest.sender.period_start} to {selectedRequest.sender.period_end}</p>
             </>
           )}
-        </div>
-      </div>
-
-      {/* Price & Description Input */}
-      <div className="mt-6 border-t pt-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block font-medium">Enter price for this request:</label>
-            <input
-              type="number"
-              value={requestprice}
-              onChange={(e)=>{setrequestprice(e.target.value)  }}
-              className="w-full p-2 border rounded"
-              placeholder="e.g., 5000"
-            />
-          </div>
-          <div>
-            <label className="block font-medium">Add description:</label>
-            <textarea
-              rows="2"
-              value={preview_desc}
-              onChange={(e)=>{setpreview_desc(e.target.value)}}
-              className="w-full p-2 border rounded"
-              placeholder="e.g., Price is negotiable based on duration."
-            />
-          </div>
         </div>
       </div>
 

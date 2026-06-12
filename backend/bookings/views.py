@@ -8,7 +8,7 @@ import razorpay
 
 from authentication.decorators import jwt_login_required
 from .models import LabourRequest, LandRequest, MachineRequest, Payment
-from .tasks import send_booking_notification_emails
+from .tasks import send_booking_notification_emails, send_approval_notification_emails, send_bank_details_reminder
 
 @csrf_exempt
 @jwt_login_required
@@ -375,6 +375,8 @@ def preview_request(request):
                     target.request_price = new_price
                     target.preview_date = preview_date
                     target.save()
+                    if new_status == "approved":
+                        send_approval_notification_emails.delay(target.sender_mobile, receiver_mobile, request_type)
                     return JsonResponse({"message": "Land request updated successfully", "status": "success"}, status=200)
                 except LandRequest.DoesNotExist:
                     return JsonResponse({"error": "Land request not found"}, status=404)
@@ -387,6 +389,8 @@ def preview_request(request):
                     target.request_price = new_price
                     target.preview_date = preview_date
                     target.save()
+                    if new_status == "approved":
+                        send_approval_notification_emails.delay(target.sender_mobile, receiver_mobile, request_type)
                     return JsonResponse({"message": "Machine request updated successfully", "status": "success"}, status=200)
                 except MachineRequest.DoesNotExist:
                     return JsonResponse({"error": "Machine request not found"}, status=404)
@@ -399,6 +403,8 @@ def preview_request(request):
                     target.request_price = new_price
                     target.preview_date = preview_date
                     target.save()
+                    if new_status == "approved":
+                        send_approval_notification_emails.delay(target.sender_mobile, receiver_mobile, request_type)
                     return JsonResponse({"message": "Labour request updated successfully", "status": "success"}, status=200)
                 except LabourRequest.DoesNotExist:
                     return JsonResponse({"error": "Labour request not found"}, status=404)
@@ -409,6 +415,44 @@ def preview_request(request):
         except Exception as e:
             return JsonResponse({"error": f"Something went wrong: {str(e)}"}, status=500)
 
+    return JsonResponse({"error": "Invalid HTTP method"}, status=405)
+
+@csrf_exempt
+@jwt_login_required
+def check_payment_readiness(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            sender_mobile = data.get("sender_mobile")
+            receiver_mobile = data.get("receiver_mobile")
+
+            if not sender_mobile or not receiver_mobile:
+                return JsonResponse({"error": "Missing mobile numbers"}, status=400)
+
+            from authentication.models import User
+            sender = User.objects.filter(mobile=sender_mobile).first()
+            receiver = User.objects.filter(mobile=receiver_mobile).first()
+
+            if not sender or not receiver:
+                return JsonResponse({"error": "Users not found"}, status=404)
+
+            def has_bank_details(u):
+                has_upi = bool(u.upi_id and u.upi_id.strip())
+                has_bank = bool(u.acc_no and u.acc_no.strip() and u.ifsc and u.ifsc.strip())
+                return has_upi or has_bank
+
+            if not has_bank_details(receiver):
+                send_bank_details_reminder.delay(receiver_mobile)
+                return JsonResponse({"status": "error", "missing": "receiver", "message": "Owner has not updated their bank details. We have sent them an email to update it."}, status=200)
+
+            if not has_bank_details(sender):
+                return JsonResponse({"status": "error", "missing": "sender", "message": "Please update your bank details in your profile before making a payment."}, status=200)
+
+            return JsonResponse({"status": "ready", "message": "Both parties have bank details."}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": f"Error: {str(e)}"}, status=500)
+    
     return JsonResponse({"error": "Invalid HTTP method"}, status=405)
 
 @csrf_exempt
@@ -520,4 +564,55 @@ def verify_razorpay_payment(request):
             print("Error verifying Razorpay payment:", e)
             return JsonResponse({"error": str(e)}, status=500)
             
+    return JsonResponse({"error": "Method not allowed"}, status=405)
+
+@csrf_exempt
+@jwt_login_required
+def transaction_history(request):
+    if request.method == "GET":
+        try:
+            user_mobile = request.user.mobile
+            payments = Payment.objects.all().order_by('-created_at')
+            history = []
+
+            for payment in payments:
+                req = None
+                request_title = "Payment"
+
+                if payment.request_type == "Land Rent" or payment.request_type == "land":
+                    req = LandRequest.objects.filter(id=payment.request_id).first()
+                    request_title = "Land Rent"
+                elif payment.request_type == "Labour" or payment.request_type == "labour":
+                    req = LabourRequest.objects.filter(id=payment.request_id).first()
+                    request_title = "Labour Hire"
+                elif payment.request_type == "Machine Rent" or payment.request_type == "machine":
+                    req = MachineRequest.objects.filter(id=payment.request_id).first()
+                    request_title = "Machine Rent"
+
+                if req:
+                    # Check if user is sender (debited) or receiver (credited)
+                    if req.sender_mobile == user_mobile:
+                        history.append({
+                            "id": payment.payment_id,
+                            "order_id": payment.order_id,
+                            "amount": str(payment.amount),
+                            "type": "Debited",
+                            "status": payment.status,
+                            "date": payment.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                            "description": f"Paid for {request_title} (To: {req.receiver_mobile})"
+                        })
+                    elif req.receiver_mobile == user_mobile:
+                        history.append({
+                            "id": payment.payment_id,
+                            "order_id": payment.order_id,
+                            "amount": str(payment.amount),
+                            "type": "Credited",
+                            "status": payment.status,
+                            "date": payment.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                            "description": f"Received for {request_title} (From: {req.sender_mobile})"
+                        })
+
+            return JsonResponse({"status": "success", "transactions": history})
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
     return JsonResponse({"error": "Method not allowed"}, status=405)
