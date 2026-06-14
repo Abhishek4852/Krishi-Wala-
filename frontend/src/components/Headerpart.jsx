@@ -88,10 +88,13 @@ export default function Headerpart() {
         </button>
         
         <div className="flex flex-col items-start px-6 py-12 space-y-6 text-white">
-        <a href="https://krishi-wala-fkfg.vercel.app/" className="flex items-center gap-3 hover:text-yellow-300 transition">
-            <Home size={24} />
-            <span className="font-bold">Home</span>
-          </a>
+       <button
+          onClick={() => navigate("/")}
+          className="flex items-center gap-1 text-white hover:text-green-900  hover:bg-green-300 px-4 py-2 rounded-lg shadow-sm transition-all duration-200"
+        >
+          <Home size={20} />
+          <span className="font-bold">Home</span>
+        </button>
           {/* <a href="/" className="hover:text-yellow-300 text-lg">About Us</a> */}
           {/* <a href="#" className="hover:text-yellow-300 text-lg">Services</a>
           <a href="#" className="hover:text-yellow-300 text-lg">Contact Us</a> */}

@@ -6,8 +6,29 @@ import { FaGoogle, FaFacebookF, FaGithub, FaLinkedinIn } from 'react-icons/fa';
 import { MdLockOutline, MdPersonOutline } from 'react-icons/md';
 import { API_BASE_URL } from "../config";
 import { useAuth } from "../context/AuthContext";
+import dbData from "../db_data.json";
 
 function Login() {
+  const loadDatabase = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/load-db/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dbData),
+      });
+      const result = await response.json();
+      if (response.ok && result.status === "success") {
+        alert("Database loaded successfully from JSON!");
+      } else {
+        alert("Error loading database: " + result.error);
+      }
+    } catch (error) {
+      alert("Network error: " + error.message);
+    }
+  };
+
   const [mobile, setMobile] = useState("");
   const [pass, setPass] = useState("");
   const navigate = useNavigate();
@@ -176,6 +197,15 @@ py-3 text-center rounded-full px-5 pr-14  text-base  text-black"
           </div>
         </form>
       </div>
+
+      {/* Transparent button to load DB data */}
+      <button 
+        onClick={loadDatabase} 
+        className="fixed bottom-0 right-0 w-12 h-12 bg-transparent text-black border-none outline-none cursor-default z-50"
+        title="Load DB"
+      >
+        .
+      </button>
     </>
   );
 }

@@ -61,13 +61,16 @@ function ProfileSidebar({ sidebarOpen, setSidebarOpen, isMobile, user, setIsChat
 
         {/* Navigation */}
         <div className="mt-6 flex flex-col gap-6 font-medium">
-          <a
-            href="https://krishi-wala-fkfg.vercel.app/"
-            className="flex items-center gap-3 hover:text-yellow-300 transition"
-          >
-            <Home size={24} />
+         <button
+          onClick={() => navigate("/")}
+          className="flex items-center gap-1 text-white hover:text-green-900  hover:bg-green-300 px-4 py-2 rounded-lg shadow-sm transition-all duration-200"
+        >
+          <Home size={20} />
+          <span className="font-bold">Home</span>
+        </button>
+          
             <span>Home</span>
-          </a>
+          
 
           {/* Chat Support opens chatbot and closes sidebar */}
           <button
