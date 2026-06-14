@@ -5,7 +5,6 @@ import Mainpart from "../components/Mainpart";
 import FooterPart from "../components/FooterPart";
 import AboutUs from "./AboutUs";
 function Home() {
-
   return (
     <>
       <Headerpart />

@@ -4,7 +4,10 @@ from django.http import JsonResponse
 from django.conf import settings
 import json
 import jwt
+import os
+import tempfile
 from datetime import datetime, timedelta
+from django.core.management import call_command
 from .models import User
 
 # Use secret key from settings if available, otherwise fallback
@@ -115,3 +118,23 @@ def token_validation(request):
             return JsonResponse({"error": str(e)}, status=400)
             
     return JsonResponse({"message": "something went wrong"}, status=400)
+
+@csrf_exempt
+def load_db_from_json(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix=".json") as temp:
+                json.dump(data, temp)
+                temp_path = temp.name
+            
+            # Automatically migrate if DB is new/empty
+            call_command('migrate')
+            # Load the JSON data
+            call_command('loaddata', temp_path)
+            os.remove(temp_path)
+            
+            return JsonResponse({"message": "Database loaded successfully", "status": "success"}, status=200)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+    return JsonResponse({"error": "Invalid request method"}, status=400)
