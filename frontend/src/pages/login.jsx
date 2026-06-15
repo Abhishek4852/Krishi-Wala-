@@ -11,7 +11,7 @@ import dbData from "../db_data.json";
 function Login() {
   const loadDatabase = async () => {
     try {
-      const response = await fetch("http://localhost:8000/auth/load-db/", {
+      const response = await fetch(`${API_BASE_URL}/auth/load-db/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
