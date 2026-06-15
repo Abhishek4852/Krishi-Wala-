@@ -69,7 +69,7 @@ export default function TakeLandOnRentHeader({
         };
 
         console.log("filter data", filters);
-        const response = await fetch(`${API_BASE_URL}/search/filter_land/`, {
+        const response = await fetch(`${API_BASE_URL}/search/v2/filter_land/`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
