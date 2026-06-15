@@ -29,7 +29,7 @@ const Mainpart = () => {
     //   }
 
     //   // Verify token (if necessary)
-    //   const response = await fetch(`${API_BASE_URL}/token_validation/`, {
+    //   const response = await fetch(`${API_BASE_URL}/auth/token_validation/`, {
     //     method: "POST",
     //     headers: {
     //       "Content-Type": "application/json",

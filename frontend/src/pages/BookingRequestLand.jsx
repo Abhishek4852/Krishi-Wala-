@@ -68,7 +68,7 @@ const BookingRequestLand = ({ isOpen, onClose, landData }) => {
 
       async function senddata() {
         try {
-          const response = await fetch(`${API_BASE_URL}/land_request/`, {
+          const response = await fetch(`${API_BASE_URL}/bookings/land_request/`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

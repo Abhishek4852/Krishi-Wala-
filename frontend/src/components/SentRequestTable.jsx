@@ -20,7 +20,7 @@ const SentRequestTable = () => {
       return;
     }
     try {
-      const response = await fetch(`${API_BASE_URL}/sent_request/`, {
+      const response = await fetch(`${API_BASE_URL}/bookings/sent_request/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -54,7 +54,7 @@ const SentRequestTable = () => {
 
   const handlePayNowClick = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/check_payment_readiness/`, {
+      const res = await fetch(`${API_BASE_URL}/bookings/check_payment_readiness/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -87,7 +87,7 @@ const SentRequestTable = () => {
       else if (selectedRequest.type === "labour") reqType = "Labour";
       else reqType = "Machine Rent";
 
-      const res = await fetch(`${API_BASE_URL}/create_razorpay_order/`, {
+      const res = await fetch(`${API_BASE_URL}/bookings/create_razorpay_order/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -115,7 +115,7 @@ const SentRequestTable = () => {
         order_id: orderData.order_id,
         handler: async function (response) {
           try {
-            const verifyRes = await fetch(`${API_BASE_URL}/verify_razorpay_payment/`, {
+            const verifyRes = await fetch(`${API_BASE_URL}/bookings/verify_razorpay_payment/`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",

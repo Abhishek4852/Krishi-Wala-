@@ -92,7 +92,7 @@ function LabourHireRequest({ labour, open, setOpen }) {
     };
 
     try {
-      const response = await fetch(`${API_BASE_URL}/labour_request/`, {
+      const response = await fetch(`${API_BASE_URL}/bookings/labour_request/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

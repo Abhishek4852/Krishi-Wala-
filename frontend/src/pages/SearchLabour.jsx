@@ -56,7 +56,7 @@ function SearchLabour() {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/search_labour/`, {
+        const response = await fetch(`${API_BASE_URL}/search/search_labour/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({}),

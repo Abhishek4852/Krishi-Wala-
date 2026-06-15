@@ -6,7 +6,7 @@ const CallApiButton = () => {
 
   const handleClick = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/abhishek4852`, {
+      const response = await fetch(`${API_BASE_URL}/listings/abhishek4852`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

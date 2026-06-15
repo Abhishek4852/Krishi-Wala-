@@ -70,7 +70,7 @@ function BookingRequestMachine({ open, setOpen, machinedata }) {
 
       async function senddata() {
         try {
-          const response = await fetch(`${API_BASE_URL}/machine_request/`, {
+          const response = await fetch(`${API_BASE_URL}/bookings/machine_request/`, {
             method: "POST",
             headers: {
               'Content-Type': "application/json",

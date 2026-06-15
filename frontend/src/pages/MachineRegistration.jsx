@@ -104,7 +104,7 @@ function MachineRegistration() {
 
         async function senddata() {
           try {
-            const response = await fetch(`${API_BASE_URL}/machine_registration/`, {
+            const response = await fetch(`${API_BASE_URL}/listings/machine_registration/`, {
               method: "POST",
               headers: {
                 "Authorization": `Bearer ${token}`
