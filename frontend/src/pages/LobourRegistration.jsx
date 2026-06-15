@@ -91,7 +91,7 @@ function LabourRegistration() {
               formData.append("avatar", formData1.avatar);
             }
 
-            const response = await fetch(`${API_BASE_URL}/listings/v2/labour_registration/`, {
+            const response = await fetch(`${API_BASE_URL}/listings/labour_registration/`, {
               method: "POST",
               headers: {
                 "Authorization": `Bearer ${token}`

@@ -54,7 +54,7 @@ const ProfilePage = () => {
   const fetchProfile = async () => {
     if (!token) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/listings/v2/get_profile/`, {
+      const res = await fetch(`${API_BASE_URL}/listings/get_profile/`, {
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -76,7 +76,7 @@ const ProfilePage = () => {
   const fetchListings = async () => {
     if (!token) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/listings/v2/get_user_listings/`, {
+      const res = await fetch(`${API_BASE_URL}/listings/get_user_listings/`, {
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -95,7 +95,7 @@ const ProfilePage = () => {
   const fetchTransactions = async () => {
     if (!token) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/bookings/v2/transaction_history/`, {
+      const res = await fetch(`${API_BASE_URL}/bookings/transaction_history/`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
@@ -126,7 +126,7 @@ const ProfilePage = () => {
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(`${API_BASE_URL}/listings/v2/update_profile/`, {
+      const res = await fetch(`${API_BASE_URL}/listings/update_profile/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -149,7 +149,7 @@ const ProfilePage = () => {
 
   const handleUpdateLabour = async (id, updatedFields) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/listings/v2/update_labour_listing/`, {
+      const res = await fetch(`${API_BASE_URL}/listings/update_labour_listing/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -171,7 +171,7 @@ const ProfilePage = () => {
 
   const handleUpdateLand = async (land_id, updatedFields) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/listings/v2/update_land_listing/`, {
+      const res = await fetch(`${API_BASE_URL}/listings/update_land_listing/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -193,7 +193,7 @@ const ProfilePage = () => {
 
   const handleUpdateMachine = async (id, updatedFields) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/listings/v2/update_machine_listing/`, {
+      const res = await fetch(`${API_BASE_URL}/listings/update_machine_listing/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

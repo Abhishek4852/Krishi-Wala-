@@ -60,7 +60,7 @@ const MachineSearchSideBar = ({ responsedata, setresponsedata }) => {
 
     async function senddata() {
       try {
-        const response = await fetch(`${API_BASE_URL}/search/v2/search_machine/`, {
+        const response = await fetch(`${API_BASE_URL}/search/search_machine/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(filterdata),

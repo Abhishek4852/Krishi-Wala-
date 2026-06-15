@@ -145,7 +145,7 @@ function PostLand() {
     // registration data sent to backend django
     async function senddata() {
       try {
-        const response = await fetch(`${API_BASE_URL}/listings/v2/post_land/`, {
+        const response = await fetch(`${API_BASE_URL}/listings/post_land/`, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${token}`

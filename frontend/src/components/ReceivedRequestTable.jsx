@@ -14,7 +14,7 @@ const ReceivedRequestTable = () => {
     if (!user) { alert("Please log in first."); return; }
     
     try {
-      const response = await fetch(`${API_BASE_URL}/bookings/v2/recieved_request/`, {
+      const response = await fetch(`${API_BASE_URL}/bookings/recieved_request/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -61,7 +61,7 @@ const requestupdate = {
     }
     async function senddata(){
         try {
-          const response = await fetch(`${API_BASE_URL}/bookings/v2/preview_request/`,{
+          const response = await fetch(`${API_BASE_URL}/bookings/preview_request/`,{
             method:"POST",
             headers:{
               'Content-Type':"application/json",
