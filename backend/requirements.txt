@@ -13,3 +13,4 @@ celery
 redis
 razorpay
 python-dotenv
+google-generativeai

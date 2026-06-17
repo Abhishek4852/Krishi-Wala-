@@ -1,6 +1,7 @@
 // ChatSupport.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare } from 'react-feather';
+import { API_BASE_URL } from '../config';
 
 import faqs from '../Addressjsondata/FAQ.json'; // ✅ Ensure this is correct
 
@@ -12,6 +13,7 @@ const ChatSupport = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [userInput, setUserInput] = useState('');
   const [showInputBox, setShowInputBox] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
 
   const messagesEndRef = useRef(null);
 
@@ -45,6 +47,22 @@ const ChatSupport = () => {
         scrollbar-width: auto !important; /* Wider scrollbar in Firefox */
         scrollbar-color: #10b981 #d1fae5 !important;
       }
+      @keyframes typingBounce {
+        0%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-6px); }
+      }
+      .typing-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #10b981;
+        margin: 0 2px;
+        animation: typingBounce 1.4s infinite ease-in-out;
+      }
+      .typing-dot:nth-child(1) { animation-delay: 0s; }
+      .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+      .typing-dot:nth-child(3) { animation-delay: 0.4s; }
     `;
     document.head.appendChild(style);
 
@@ -55,16 +73,48 @@ const ChatSupport = () => {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, isTyping]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (userInput.trim()) {
+      const query = userInput.trim();
       setMessages((prev) => [
         ...prev,
-        { sender: 'user', text: userInput },
-        { sender: 'bot', text: "Thank you! We'll get back to you soon." },
+        { sender: 'user', text: query },
       ]);
       setUserInput('');
+      setIsTyping(true);
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/krishi-ai/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ query: query }),
+        });
+
+        const data = await response.json();
+        setIsTyping(false);
+
+        if (response.ok && data.answer) {
+          setMessages((prev) => [
+            ...prev,
+            { sender: 'bot', text: data.answer },
+          ]);
+        } else {
+          setMessages((prev) => [
+            ...prev,
+            { sender: 'bot', text: data.error || "Sorry, something went wrong. Please try again." },
+          ]);
+        }
+      } catch (error) {
+        setIsTyping(false);
+        setMessages((prev) => [
+          ...prev,
+          { sender: 'bot', text: "Network error. Please check your internet connection." },
+        ]);
+      }
     }
   };
 
@@ -180,6 +230,23 @@ const ChatSupport = () => {
                 </div>
               </div>
             ))}
+
+            {/* Typing Indicator */}
+            {isTyping && (
+              <div className="flex items-start space-x-2 justify-start">
+                <div className="text-xl">🤖</div>
+                <div className="p-3 text-sm rounded-2xl shadow-md bg-green-200 text-gray-800 rounded-bl-none">
+                  <span className="block font-semibold mb-1">Bot</span>
+                  <div className="flex items-center gap-1">
+                    <span className="typing-dot"></span>
+                    <span className="typing-dot"></span>
+                    <span className="typing-dot"></span>
+                    <span className="text-xs text-gray-500 ml-2">typing...</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div ref={messagesEndRef} />
           </div>
 
